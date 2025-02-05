@@ -1,4 +1,7 @@
+import 'package:daydayup/components/brief.dart';
 import 'package:daydayup/components/calendar.dart';
+import 'package:daydayup/components/courses.dart';
+import 'package:daydayup/components/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -24,31 +27,46 @@ class PhoneHomePageTab extends StatefulWidget {
 }
 
 class _PhoneHomePageTabState extends State<PhoneHomePageTab> {
-  int tabIndex = 0;
+  int tabIndex = 1;
   late List<Widget> listScreens;
+  late PageController _pageController;
+
   @override
   void initState() {
     super.initState();
     listScreens = [
-      Placeholder(),
+      Brief(),
       Calendar(),
-      Placeholder(),
-      Placeholder(),
+      Courses(),
+      Setting(),
     ];
+    _pageController = PageController(initialPage: tabIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: tabIndex, children: listScreens),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (int index) {
+          setState(() {
+            tabIndex = index;
+          });
+        },
+        children: listScreens,
+      ),
       bottomNavigationBar: BottomNavigationBar(
-        // backgroundColor: Theme.of(context).primaryColor,
-        // selectedItemColor: Colors.black,
-        // unselectedItemColor: Colors.white,
         currentIndex: tabIndex,
         onTap: (int index) {
           setState(() {
             tabIndex = index;
+            _pageController.jumpToPage(index);
           });
         },
         items: [
@@ -58,7 +76,6 @@ class _PhoneHomePageTabState extends State<PhoneHomePageTab> {
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
-      // backgroundColor: Theme.of(context).primaryColor,
     );
   }
 }
