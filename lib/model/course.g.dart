@@ -9,18 +9,18 @@ part of 'course.dart';
 Course _$CourseFromJson(Map<String, dynamic> json) => Course(
       id: json['id'] as String,
       name: json['name'] as String,
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
+      user: const UserConverter().fromJson(json['user'] as String),
       description: json['description'] as String,
-      pattern: Pattern.fromJson(json['pattern'] as Map<String, dynamic>),
+      pattern: const PatternConverter().fromJson(json['pattern'] as String),
       color: const ColorConverter().fromJson((json['color'] as num).toInt()),
     );
 
 Map<String, dynamic> _$CourseToJson(Course instance) => <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
-      'user': instance.user,
+      'user': const UserConverter().toJson(instance.user),
       'description': instance.description,
-      'pattern': instance.pattern,
+      'pattern': const PatternConverter().toJson(instance.pattern),
       'color': const ColorConverter().toJson(instance.color),
     };
 
@@ -28,7 +28,7 @@ Lesson _$LessonFromJson(Map<String, dynamic> json) => Lesson(
       courseId: json['courseId'] as String,
       id: json['id'] as String,
       name: json['name'] as String,
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
+      user: const UserConverter().fromJson(json['user'] as String),
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
     );
@@ -37,7 +37,7 @@ Map<String, dynamic> _$LessonToJson(Lesson instance) => <String, dynamic>{
       'courseId': instance.courseId,
       'id': instance.id,
       'name': instance.name,
-      'user': instance.user,
+      'user': const UserConverter().toJson(instance.user),
       'startTime': instance.startTime.toIso8601String(),
       'endTime': instance.endTime.toIso8601String(),
     };
