@@ -31,6 +31,7 @@ Lesson _$LessonFromJson(Map<String, dynamic> json) => Lesson(
       user: const UserConverter().fromJson(json['user'] as String),
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
+      status: $enumDecode(_$LessonStatusEnumMap, json['status']),
     );
 
 Map<String, dynamic> _$LessonToJson(Lesson instance) => <String, dynamic>{
@@ -40,7 +41,15 @@ Map<String, dynamic> _$LessonToJson(Lesson instance) => <String, dynamic>{
       'user': const UserConverter().toJson(instance.user),
       'startTime': instance.startTime.toIso8601String(),
       'endTime': instance.endTime.toIso8601String(),
+      'status': _$LessonStatusEnumMap[instance.status]!,
     };
+
+const _$LessonStatusEnumMap = {
+  LessonStatus.notStarted: 100,
+  LessonStatus.finished: 200,
+  LessonStatus.skipped: 301,
+  LessonStatus.notAttended: 302,
+};
 
 Pattern _$PatternFromJson(Map<String, dynamic> json) => Pattern(
       startDate: DateTime.parse(json['startDate'] as String),

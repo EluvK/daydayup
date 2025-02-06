@@ -63,6 +63,15 @@ class DataBase {
     );
   }
 
+  Future<void> upsertCourse(Course course) async {
+    final db = await getDb();
+    await db.insert(
+      'courses',
+      course.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   Future<Course?> getCourse(String id) async {
     final db = await getDb();
     final List<Map<String, dynamic>> maps = await db.query(
@@ -75,6 +84,15 @@ class DataBase {
       return Course.fromJson(maps.first);
     }
     return null;
+  }
+
+  Future<List<Course>> getCourses() async {
+    final db = await getDb();
+    final List<Map<String, dynamic>> maps = await db.query('courses');
+
+    return List.generate(maps.length, (i) {
+      return Course.fromJson(maps[i]);
+    });
   }
 
   Future<void> deleteCourse(String id) async {
@@ -120,6 +138,15 @@ class DataBase {
     return null;
   }
 
+  Future<List<User>> getUsers() async {
+    final db = await getDb();
+    final List<Map<String, dynamic>> maps = await db.query('users');
+
+    return List.generate(maps.length, (i) {
+      return User.fromJson(maps[i]);
+    });
+  }
+
   Future<void> deleteUser(String id) async {
     final db = await getDb();
     await db.delete(
@@ -130,13 +157,26 @@ class DataBase {
   }
 
   // lesson
-  Future<void> insertLesson(Lesson lesson) async {
+  Future<void> upsertLesson(Lesson lesson) async {
     final db = await getDb();
     await db.insert(
       'lessons',
       lesson.toJson(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  Future<void> upsertLessons(List<Lesson> lessons) async {
+    final db = await getDb();
+    final batch = db.batch();
+    for (final lesson in lessons) {
+      batch.insert(
+        'lessons',
+        lesson.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<void> updateLesson(Lesson lesson) async {

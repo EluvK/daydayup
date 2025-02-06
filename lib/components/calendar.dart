@@ -11,7 +11,20 @@ class Calendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CalendarTable();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Calendar'),
+      ),
+      body: const CalendarTable(),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     // Add your onPressed code here!
+      //   },
+      //   backgroundColor: Colors.green,
+      //   child: const Icon(Icons.add),
+      // ),
+    );
+    // return CalendarTable();
   }
 }
 
@@ -121,6 +134,7 @@ class _CalendarTableState extends State<CalendarTable> {
         TableCalendar<Lesson>(
           firstDay: kFirstDay,
           lastDay: kLastDay,
+          startingDayOfWeek: StartingDayOfWeek.monday,
           focusedDay: _focusedDay.value,
           headerVisible: false,
           availableCalendarFormats: const {

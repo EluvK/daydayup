@@ -11,7 +11,14 @@ class ColorConverter implements JsonConverter<Color, int> {
   Color fromJson(int json) => Color(json);
 
   @override
-  int toJson(Color color) => color.value;
+  int toJson(Color color) {
+    final alpha = (color.a * 255).toInt();
+    final red = (color.r * 255).toInt();
+    final green = (color.g * 255).toInt();
+    final blue = (color.b * 255).toInt();
+    // Combine the components into a single int using bit shifting
+    return (alpha << 24) | (red << 16) | (green << 8) | blue;
+  }
 }
 
 class UserConverter implements JsonConverter<User, String> {
@@ -37,17 +44,17 @@ class PatternConverter implements JsonConverter<Pattern, String> {
 @JsonSerializable()
 class Course {
   final String id;
-  final String name;
+  String name;
 
   @UserConverter()
-  final User user;
-  final String description;
+  User user;
+  String description;
 
   @PatternConverter()
-  final Pattern pattern;
+  Pattern pattern;
 
   @ColorConverter()
-  final Color color;
+  Color color;
 
   Course({
     required this.id,
@@ -68,9 +75,10 @@ class Lesson {
   final String id;
   final String name;
   @UserConverter()
-  final User user;
-  final DateTime startTime;
-  final DateTime endTime;
+  User user;
+  DateTime startTime;
+  DateTime endTime;
+  LessonStatus status;
 
   Lesson({
     required this.courseId,
@@ -79,6 +87,7 @@ class Lesson {
     required this.user,
     required this.startTime,
     required this.endTime,
+    required this.status,
   });
 
   factory Lesson.fromJson(Map<String, dynamic> json) => _$LessonFromJson(json);
@@ -118,4 +127,16 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
+}
+
+@JsonEnum()
+enum LessonStatus {
+  @JsonValue(100)
+  notStarted, // Lesson is in the future
+  @JsonValue(200)
+  finished, // Lesson is in the past and has been attended
+  @JsonValue(301)
+  skipped, // Lesson is in the past and has not been attended
+  @JsonValue(302)
+  notAttended, // Lesson is in the past and has not been attended
 }

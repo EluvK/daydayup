@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:daydayup/controller/courses.dart';
+import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/home.dart';
+import 'package:daydayup/pages/edit_course.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,6 +18,15 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+
+  await Get.putAsync(() async {
+    final controller = CoursesController();
+    return controller;
+  });
+  await Get.putAsync(() async {
+    final controller = SettingController();
+    return controller;
+  });
 
   runApp(const MyApp());
 }
@@ -30,6 +42,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       getPages: [
         GetPage(name: '/', page: () => HomePage()),
+        GetPage(name: '/edit-course', page: () => EditCoursePage()),
       ],
       themeMode: ThemeMode.light,
       theme: FlexThemeData.light(
