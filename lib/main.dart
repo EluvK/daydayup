@@ -5,6 +5,7 @@ import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/home.dart';
 import 'package:daydayup/pages/edit_course.dart';
+import 'package:daydayup/pages/edit_lesson.dart';
 import 'package:daydayup/pages/edit_user.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/', page: () => HomePage()),
         GetPage(name: '/edit-course', page: () => EditCoursePage()),
         GetPage(name: '/edit-user', page: () => EditUserPage()),
+        GetPage(name: '/edit-lesson', page: () => EditLessonPage()),
       ],
       themeMode: ThemeMode.light,
       theme: FlexThemeData.light(
