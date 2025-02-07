@@ -88,7 +88,9 @@ class _UserSettingState extends State<UserSetting> {
 
   Widget _buildNewUserTile() {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () {
+        Get.toNamed('/edit-user');
+      },
       child: ListTile(
         leading: Icon(Icons.add),
         title: Text('Add User'),
@@ -99,7 +101,9 @@ class _UserSettingState extends State<UserSetting> {
   Widget _buildUserTile(User user) {
     print(user.color);
     return ElevatedButton(
-      onPressed: null,
+      onPressed: () {
+        Get.toNamed('/edit-user', arguments: user.id);
+      },
       child: ListTile(
         leading: Icon(Icons.circle, color: user.color),
         title: Text(user.name),

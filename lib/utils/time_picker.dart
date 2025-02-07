@@ -1,14 +1,16 @@
 import 'package:board_datetime_picker/board_datetime_picker.dart';
 import 'package:flutter/material.dart';
 
-class PickerItemWidget extends StatelessWidget {
-  PickerItemWidget({
+class TimePickerWidget extends StatelessWidget {
+  TimePickerWidget({
     super.key,
+    required this.timeTitle,
     required this.pickerType,
     this.initialValue,
     this.onChange,
   });
 
+  final TimeTitleEnum timeTitle;
   final DateTimePickerType pickerType;
   final DateTime? initialValue;
   final void Function(DateTime)? onChange;
@@ -25,6 +27,7 @@ class PickerItemWidget extends StatelessWidget {
           final result = await showBoardDateTimePicker(
             context: context,
             pickerType: pickerType,
+            initialDate: date.value,
             options: BoardDateTimeOptions(
               languages: BoardPickerLanguages(
                 today: '今天',
@@ -47,6 +50,12 @@ class PickerItemWidget extends StatelessWidget {
             // Specify if you want changes in the picker to take effect immediately.
             valueNotifier: date,
             controller: controller,
+            onChanged: (value) {
+              date.value = value;
+              if (onChange != null) {
+                onChange!(value);
+              }
+            },
           );
           if (result != null) {
             date.value = result;
@@ -57,18 +66,18 @@ class PickerItemWidget extends StatelessWidget {
           }
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           child: Row(
             children: [
               Material(
-                color: pickerType.color,
+                color: timeTitle.color,
                 borderRadius: BorderRadius.circular(8),
                 child: SizedBox(
                   height: 32,
                   width: 32,
                   child: Center(
                     child: Icon(
-                      pickerType.icon,
+                      timeTitle.icon,
                       color: Colors.white,
                     ),
                   ),
@@ -77,7 +86,7 @@ class PickerItemWidget extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  pickerType.title,
+                  timeTitle.title,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
@@ -102,40 +111,41 @@ class PickerItemWidget extends StatelessWidget {
   }
 }
 
-extension DateTimePickerTypeExtension on DateTimePickerType {
+enum TimeTitleEnum {
+  courseTime,
+  firstTime,
+}
+
+extension TimeTitleEnumExtension on TimeTitleEnum {
   String get title {
     switch (this) {
-      case DateTimePickerType.date:
-        return 'Date';
-      case DateTimePickerType.datetime:
-        return 'DateTime';
-      case DateTimePickerType.time:
-        return 'Time';
+      case TimeTitleEnum.courseTime:
+        return '课程时间';
+      case TimeTitleEnum.firstTime:
+        return '首次时间';
     }
   }
 
   IconData get icon {
     switch (this) {
-      case DateTimePickerType.date:
-        return Icons.date_range_rounded;
-      case DateTimePickerType.datetime:
-        return Icons.date_range_rounded;
-      case DateTimePickerType.time:
+      case TimeTitleEnum.courseTime:
+        return Icons.schedule_rounded;
+      case TimeTitleEnum.firstTime:
         return Icons.schedule_rounded;
     }
   }
 
   Color get color {
     switch (this) {
-      case DateTimePickerType.date:
-        return Colors.blue;
-      case DateTimePickerType.datetime:
-        return Colors.orange;
-      case DateTimePickerType.time:
+      case TimeTitleEnum.courseTime:
+        return Colors.pink;
+      case TimeTitleEnum.firstTime:
         return Colors.pink;
     }
   }
+}
 
+extension DateTimePickerTypeExtension on DateTimePickerType {
   String get format {
     switch (this) {
       case DateTimePickerType.date:

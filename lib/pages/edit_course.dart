@@ -1,7 +1,9 @@
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
+import 'package:daydayup/utils/user_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_randomcolor/flutter_randomcolor.dart';
 import 'package:get/get.dart';
@@ -77,71 +79,30 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
     return Column(
       spacing: 10.0,
       children: [
-        TextField(
-          decoration: InputDecoration(
-            labelText: 'Course Name',
-          ),
-          controller: TextEditingController(text: widget.course.name),
+        TextInputWidget(
+          title: InputTitleEnum.courseName,
           onChanged: (value) {
             widget.course.name = value;
           },
+          initialValue: widget.course.name,
         ),
-        TextField(
-          decoration: InputDecoration(
-            labelText: 'Description',
-          ),
-          controller: TextEditingController(text: widget.course.description),
+        TextInputWidget(
+          title: InputTitleEnum.courseDescription,
           onChanged: (value) {
             widget.course.description = value;
           },
+          initialValue: widget.course.description,
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            for (final user in settingController.users)
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    widget.course.user = user;
-                  });
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.all(4),
-                  // width: 120,
-                  // height: 60,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: widget.course.user == user ? user.color.withAlpha(200) : Colors.transparent,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      if (widget.course.user == user)
-                        BoxShadow(
-                          color: user.color.withAlpha(120),
-                          spreadRadius: 4,
-                          blurRadius: 5,
-                        ),
-                    ],
-                    color: user.color.withAlpha(100),
-                    borderRadius: BorderRadius.circular(12), // 调整圆角大小
-                  ),
-                  child: Center(
-                    child: Text(
-                      user.name,
-                      style: TextStyle(
-                        fontWeight: widget.course.user == user ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
+        UserPicker(
+          onChanged: (selectedUserIds) {
+            print("onChanged: $selectedUserIds");
+            widget.course.user = settingController.users.firstWhere((element) => element.id == selectedUserIds.first);
+          },
+          candidateUsers: settingController.users,
         ),
         // todo course color
-        PickerItemWidget(
+        TimePickerWidget(
+          timeTitle: TimeTitleEnum.firstTime,
           pickerType: DateTimePickerType.datetime,
           onChange: (date) {
             widget.course.pattern.startDate = date;
