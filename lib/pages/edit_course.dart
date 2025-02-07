@@ -1,10 +1,12 @@
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_randomcolor/flutter_randomcolor.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
+import 'package:board_datetime_picker/board_datetime_picker.dart';
 
 class EditCoursePage extends StatelessWidget {
   const EditCoursePage({super.key});
@@ -46,9 +48,15 @@ class _EditCourseState extends State<EditCourse> {
         pattern: Pattern(startDate: DateTime.now(), daysOfWeek: [], duration: Duration(hours: 2), courseLength: 10),
         color: RandomColor.getColorObject(Options()),
       );
-      return _EditCourseInner(course: course);
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _EditCourseInner(course: course),
+      );
     } else {
-      return _EditCourseInner(course: courseController.getCourse(widget.courseId!));
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _EditCourseInner(course: courseController.getCourse(widget.courseId!)),
+      );
     }
   }
 }
@@ -100,9 +108,11 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.all(4),
+                  // width: 120,
+                  // height: 60,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
                     border: Border.all(
                       color: widget.course.user == user ? user.color.withAlpha(200) : Colors.transparent,
                       width: 2,
@@ -115,16 +125,14 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                           blurRadius: 5,
                         ),
                     ],
+                    color: user.color.withAlpha(100),
+                    borderRadius: BorderRadius.circular(12), // 调整圆角大小
                   ),
-                  child: CircleAvatar(
-                    radius: 30,
-                    backgroundColor: user.color.withAlpha(100),
-                    child: Center(
-                      child: Text(
-                        user.name,
-                        style: TextStyle(
-                          fontWeight: widget.course.user == user ? FontWeight.bold : FontWeight.normal,
-                        ),
+                  child: Center(
+                    child: Text(
+                      user.name,
+                      style: TextStyle(
+                        fontWeight: widget.course.user == user ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ),
@@ -133,6 +141,14 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           ],
         ),
         // todo course color
+        PickerItemWidget(
+          pickerType: DateTimePickerType.datetime,
+          onChange: (date) {
+            widget.course.pattern.startDate = date;
+          },
+          initialValue: widget.course.pattern.startDate,
+        ),
+
         ElevatedButton(
           onPressed: () {
             final courseController = Get.find<CoursesController>();

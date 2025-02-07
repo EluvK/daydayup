@@ -96,10 +96,10 @@ class Lesson {
 
 @JsonSerializable()
 class Pattern {
-  final DateTime startDate;
-  final List<String> daysOfWeek;
-  final Duration duration;
-  final int courseLength;
+  DateTime startDate;
+  List<String> daysOfWeek;
+  Duration duration;
+  int courseLength;
 
   Pattern({
     required this.startDate,

@@ -37,6 +37,11 @@ class DataBase {
             PRIMARY KEY (courseId, id)
           )
         ''');
+
+        // insert a default user
+        await db.execute('''
+          INSERT INTO users (id, name, color) VALUES ('default', 'Default', 0xFF3F3F00)
+        ''');
       },
     );
 
