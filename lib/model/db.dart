@@ -110,22 +110,31 @@ class DataBase {
   }
 
   // user
-  Future<void> insertUser(User user) async {
+  // Future<void> insertUser(User user) async {
+  //   final db = await getDb();
+  //   await db.insert(
+  //     'users',
+  //     user.toJson(),
+  //     conflictAlgorithm: ConflictAlgorithm.replace,
+  //   );
+  // }
+
+  // Future<void> updateUser(User user) async {
+  //   final db = await getDb();
+  //   await db.update(
+  //     'users',
+  //     user.toJson(),
+  //     where: 'id = ?',
+  //     whereArgs: [user.id],
+  //   );
+  // }
+
+  Future<void> upsertUser(User user) async {
     final db = await getDb();
     await db.insert(
       'users',
       user.toJson(),
       conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<void> updateUser(User user) async {
-    final db = await getDb();
-    await db.update(
-      'users',
-      user.toJson(),
-      where: 'id = ?',
-      whereArgs: [user.id],
     );
   }
 

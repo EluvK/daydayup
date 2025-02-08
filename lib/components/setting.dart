@@ -12,7 +12,7 @@ class Setting extends StatelessWidget {
       appBar: AppBar(
         title: Text('Setting'),
       ),
-      body: Column(
+      body: ListView(
         children: [
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -102,7 +102,7 @@ class _UserSettingState extends State<UserSetting> {
     print(user.color);
     return ElevatedButton(
       onPressed: () {
-        Get.toNamed('/edit-user', arguments: user.id);
+        Get.toNamed('/edit-user', arguments: [user.id]);
       },
       child: ListTile(
         leading: Icon(Icons.circle, color: user.color),

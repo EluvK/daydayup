@@ -115,9 +115,9 @@ class Pattern {
 @JsonSerializable()
 class User {
   final String id;
-  final String name;
+  String name;
   @ColorConverter()
-  final Color color;
+  Color color;
 
   User({
     required this.id,

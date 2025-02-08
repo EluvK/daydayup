@@ -54,4 +54,17 @@ class SettingController extends GetxController {
   User getDefaultUser() {
     return users.firstWhere((user) => user.id == defaultUserId.value);
   }
+
+  User getUser(String userId) {
+    return users.firstWhere((user) => user.id == userId);
+  }
+
+  void upsertUser(User user) {
+    if (users.contains(user)) {
+      users[users.indexWhere((u) => u.id == user.id)] = user;
+    } else {
+      users.add(user);
+    }
+    DataBase().upsertUser(user);
+  }
 }

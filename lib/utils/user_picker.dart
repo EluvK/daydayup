@@ -57,70 +57,74 @@ class _UserPickerState extends State<UserPicker> {
             Expanded(
               // flex: 1,
               child: Text(
-                'User',
+                '用户',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             Flexible(
-                flex: 2,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    for (final user in widget.candidateUsers)
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            print("selectedUsers: $selectedUserIds");
-                            print("candidateUsers: ${widget.candidateUsers}");
-                            if (widget.allowMultiple) {
-                              if (selectedUserIds.contains(user.id)) {
-                                if (selectedUserIds.length == 1) {
-                                  return;
+                flex: 3,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: 60),
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      for (final user in widget.candidateUsers)
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              print("selectedUsers: $selectedUserIds");
+                              print("candidateUsers: ${widget.candidateUsers}");
+                              if (widget.allowMultiple) {
+                                if (selectedUserIds.contains(user.id)) {
+                                  if (selectedUserIds.length == 1) {
+                                    return;
+                                  }
+                                  selectedUserIds.remove(user.id);
+                                } else {
+                                  selectedUserIds.add(user.id);
                                 }
-                                selectedUserIds.remove(user.id);
                               } else {
-                                selectedUserIds.add(user.id);
+                                selectedUserIds = [user.id];
                               }
-                            } else {
-                              selectedUserIds = [user.id];
-                            }
-                            widget.onChanged(selectedUserIds);
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.all(4),
-                          // width: 120,
-                          // height: 60,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: selectedUserIds.contains(user.id) ? user.color.withAlpha(200) : Colors.transparent,
-                              width: 2,
+                              widget.onChanged(selectedUserIds);
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.all(4),
+                            // width: 120,
+                            // height: 60,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color:
+                                    selectedUserIds.contains(user.id) ? user.color.withAlpha(200) : Colors.transparent,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                if (selectedUserIds.contains(user.id))
+                                  BoxShadow(
+                                    color: user.color.withAlpha(120),
+                                    spreadRadius: 4,
+                                    blurRadius: 5,
+                                  ),
+                              ],
+                              color: user.color.withAlpha(100),
+                              borderRadius: BorderRadius.circular(12), // 调整圆角大小
                             ),
-                            boxShadow: [
-                              if (selectedUserIds.contains(user.id))
-                                BoxShadow(
-                                  color: user.color.withAlpha(120),
-                                  spreadRadius: 4,
-                                  blurRadius: 5,
+                            child: Center(
+                              child: Text(
+                                user.name,
+                                style: TextStyle(
+                                  fontWeight: selectedUserIds.contains(user.id) ? FontWeight.bold : FontWeight.normal,
                                 ),
-                            ],
-                            color: user.color.withAlpha(100),
-                            borderRadius: BorderRadius.circular(12), // 调整圆角大小
-                          ),
-                          child: Center(
-                            child: Text(
-                              user.name,
-                              style: TextStyle(
-                                fontWeight: selectedUserIds.contains(user.id) ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 )),
           ],
         ),
