@@ -6,11 +6,27 @@ part of 'course.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+CourseGroup _$CourseGroupFromJson(Map<String, dynamic> json) => CourseGroup(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      leftTimeUnit: (json['leftTimeUnit'] as num?)?.toDouble() ?? 0,
+    );
+
+Map<String, dynamic> _$CourseGroupToJson(CourseGroup instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'leftTimeUnit': instance.leftTimeUnit,
+    };
+
 Course _$CourseFromJson(Map<String, dynamic> json) => Course(
       id: json['id'] as String,
       name: json['name'] as String,
+      groupId: json['groupId'] as String?,
       user: const UserConverter().fromJson(json['user'] as String),
       description: json['description'] as String,
+      timeTable: const CourseTimeTableConverter()
+          .fromJson(json['timeTable'] as String),
       pattern: const PatternConverter().fromJson(json['pattern'] as String),
       color: const ColorConverter().fromJson((json['color'] as num).toInt()),
     );
@@ -18,8 +34,10 @@ Course _$CourseFromJson(Map<String, dynamic> json) => Course(
 Map<String, dynamic> _$CourseToJson(Course instance) => <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
+      'groupId': instance.groupId,
       'user': const UserConverter().toJson(instance.user),
       'description': instance.description,
+      'timeTable': const CourseTimeTableConverter().toJson(instance.timeTable),
       'pattern': const PatternConverter().toJson(instance.pattern),
       'color': const ColorConverter().toJson(instance.color),
     };
@@ -51,23 +69,38 @@ const _$LessonStatusEnumMap = {
   LessonStatus.notAttended: 302,
 };
 
-Pattern _$PatternFromJson(Map<String, dynamic> json) => Pattern(
+CourseTimeTable _$CourseTimeTableFromJson(Map<String, dynamic> json) =>
+    CourseTimeTable(
       startDate: DateTime.parse(json['startDate'] as String),
       daysOfWeek: (json['daysOfWeek'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
       lessonStartTime: DateTime.parse(json['lessonStartTime'] as String),
       duration: Duration(microseconds: (json['duration'] as num).toInt()),
-      courseLength: (json['courseLength'] as num).toInt(),
     );
 
-Map<String, dynamic> _$PatternToJson(Pattern instance) => <String, dynamic>{
+Map<String, dynamic> _$CourseTimeTableToJson(CourseTimeTable instance) =>
+    <String, dynamic>{
       'startDate': instance.startDate.toIso8601String(),
       'daysOfWeek': instance.daysOfWeek,
       'lessonStartTime': instance.lessonStartTime.toIso8601String(),
       'duration': instance.duration.inMicroseconds,
-      'courseLength': instance.courseLength,
     };
+
+Pattern _$PatternFromJson(Map<String, dynamic> json) => Pattern(
+      type: $enumDecode(_$PatternTypeEnumMap, json['type']),
+      value: (json['value'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$PatternToJson(Pattern instance) => <String, dynamic>{
+      'type': _$PatternTypeEnumMap[instance.type]!,
+      'value': instance.value,
+    };
+
+const _$PatternTypeEnumMap = {
+  PatternType.eachSingleLesson: 100,
+  PatternType.costClassTimeUnit: 200,
+};
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
       id: json['id'] as String,

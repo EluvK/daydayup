@@ -36,7 +36,7 @@ class EditCourse extends StatefulWidget {
 }
 
 class _EditCourseState extends State<EditCourse> {
-  final courseController = Get.find<CoursesController>();
+  final coursesController = Get.find<CoursesController>();
   final settingController = Get.find<SettingController>();
 
   @override
@@ -48,13 +48,13 @@ class _EditCourseState extends State<EditCourse> {
         name: '',
         user: settingController.getDefaultUser(),
         description: '',
-        pattern: Pattern(
+        timeTable: CourseTimeTable(
           startDate: DateTime.now(),
           daysOfWeek: [],
           lessonStartTime: DateTime.now(),
           duration: Duration(hours: 2),
-          courseLength: 10,
         ),
+        pattern: Pattern(type: PatternType.eachSingleLesson, value: 10),
         color: RandomColor.getColorObject(Options(luminosity: Luminosity.dark)),
       );
       return Padding(
@@ -64,7 +64,7 @@ class _EditCourseState extends State<EditCourse> {
     } else {
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: _EditCourseInner(course: courseController.getCourse(widget.courseId!)),
+        child: _EditCourseInner(course: coursesController.getCourse(widget.courseId!)),
       );
     }
   }
@@ -87,7 +87,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
   @override
   void initState() {
-    dynamicDayOfWeek.value = widget.course.pattern.daysOfWeek;
+    dynamicDayOfWeek.value = widget.course.timeTable.daysOfWeek;
     lessons.value = coursesController.getCourseLessons(widget.course.id);
     super.initState();
   }
@@ -132,30 +132,30 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseFirstDayTime,
           onChange: (date) {
-            widget.course.pattern.startDate = date;
+            widget.course.timeTable.startDate = date;
             setState(() {
               var dayOfWeek = getDayOfWeek(date);
               print('day of week: $dayOfWeek');
               dynamicDayOfWeek.value = [dayOfWeek];
-              widget.course.pattern.daysOfWeek = [dayOfWeek];
+              widget.course.timeTable.daysOfWeek = [dayOfWeek];
             });
           },
-          initialValue: widget.course.pattern.startDate,
+          initialValue: widget.course.timeTable.startDate,
         ),
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseStartTime,
           onChange: (date) {
-            widget.course.pattern.lessonStartTime = date;
+            widget.course.timeTable.lessonStartTime = date;
             // recalculate course end time
             setState(() {});
           },
-          initialValue: widget.course.pattern.lessonStartTime,
+          initialValue: widget.course.timeTable.lessonStartTime,
         ),
         DurationPickerWidget(
-          initialValue: widget.course.pattern.duration,
+          initialValue: widget.course.timeTable.duration,
           onChange: (duration) {
             print('get duration: $duration');
-            widget.course.pattern.duration = duration;
+            widget.course.timeTable.duration = duration;
             // recalculate course end time
             setState(() {});
           },
@@ -165,33 +165,32 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           onChange: (date) {
             print('set end time: $date');
             // recalculate course length
-            widget.course.pattern.duration = date.difference(widget.course.pattern.lessonStartTime);
-            print('course length: ${widget.course.pattern.duration}');
+            widget.course.timeTable.duration = date.difference(widget.course.timeTable.lessonStartTime);
+            print('course length: ${widget.course.timeTable.duration}');
             setState(() {});
           },
-          initialValue: widget.course.pattern.lessonStartTime.add(widget.course.pattern.duration),
+          initialValue: widget.course.timeTable.lessonStartTime.add(widget.course.timeTable.duration),
         ),
-        NumberInputWidget(
-          title: NumberInputEnum.courseLength,
-          initialValue: widget.course.pattern.courseLength,
-          onChanged: (value) {
-            widget.course.pattern.courseLength = value;
-          },
-        ),
+        // NumberInputWidget(
+        //   title: NumberInputEnum.courseLength,
+        //   initialValue: widget.course.timeTable.courseLength,
+        //   onChanged: (value) {
+        //     widget.course.timeTable.courseLength = value;
+        //   },
+        // ),
         // 其它统计方式?
         DayOfWeekPickerWidget(
           initialSelectedDays: dynamicDayOfWeek,
           onChanged: (days) {
             print('day of week: $days');
-            widget.course.pattern.daysOfWeek = days;
+            widget.course.timeTable.daysOfWeek = days;
             // recalculate course day of week
           },
         ),
         Divider(),
         ElevatedButton(
           onPressed: () {
-            final courseController = Get.find<CoursesController>();
-            courseController.upsertCourse(
+            coursesController.upsertCourse(
               widget.course,
               [
                 // todo,
@@ -203,7 +202,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         ),
         Divider(),
         // todo view course status
-       
+
         // todo view lesson list
       ],
     );

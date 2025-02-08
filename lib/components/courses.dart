@@ -11,6 +11,31 @@ class Courses extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Courses'),
+        actions: [
+          // PopupMenuButton<String>(icon: Icon(Icons.add), itemBuilder: itemBuilder),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.add), // 使用 add icon
+            onSelected: (String value) {
+              if (value == 'add_course') {
+                Get.toNamed('/edit-course');
+              } else if (value == 'add_course_group') {
+                Get.toNamed('/edit-course-group');
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem<String>(
+                  value: 'add_course',
+                  child: Text('新增课程'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'add_course_group',
+                  child: Text('新增课程组'),
+                ),
+              ];
+            },
+          ),
+        ],
       ),
       body: CoursesTable(),
       floatingActionButton: FloatingActionButton(
@@ -33,7 +58,7 @@ class CoursesTable extends StatefulWidget {
 }
 
 class _CoursesTableState extends State<CoursesTable> {
-  var courseController = Get.find<CoursesController>();
+  var coursesController = Get.find<CoursesController>();
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +66,7 @@ class _CoursesTableState extends State<CoursesTable> {
       children: [
         Expanded(
           child: Obx(() {
-            var courses = courseController.courses;
+            var courses = coursesController.courses;
             return ListView.builder(
               itemCount: courses.length,
               itemBuilder: (context, index) {
@@ -66,7 +91,7 @@ class _CoursesTableState extends State<CoursesTable> {
         ),
         child: ListTile(
           title: Text(course.name),
-          subtitle: Text("${course.pattern.startDate.toString()} (${course.description})"),
+          subtitle: Text("${course.timeTable.startDate.toString()} (${course.description})"),
           textColor: course.color,
           onTap: () {
             Get.toNamed('/edit-course', arguments: [course.id]);

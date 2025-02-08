@@ -12,29 +12,39 @@ class DataBase {
         await db.execute('''
           CREATE TABLE users (
             id TEXT PRIMARY KEY,
-            name TEXT,
+            name TEXT NOT NULL,
             color INTEGER
           )
         ''');
         await db.execute('''
           CREATE TABLE courses (
             id TEXT PRIMARY KEY,
-            name TEXT,
-            user TEXT,
-            description TEXT,
-            pattern TEXT,
+            name TEXT NOT NULL,
+            groupId TEXT,
+            user TEXT NOT NULL,
+            description TEXT NOT NULL,
+            timeTable TEXT NOT NULL,
+            pattern TEXT NOT NULL,
             color INTEGER
           )
         ''');
         await db.execute('''
           CREATE TABLE lessons (
-            courseId TEXT,
-            id TEXT,
-            name TEXT,
-            user TEXT,
-            startTime TEXT,
-            endTime TEXT,
+            courseId TEXT NOT NULL,
+            id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            user TEXT NOT NULL,
+            startTime TEXT NOT NULL,
+            endTime TEXT NOT NULL,
             PRIMARY KEY (courseId, id)
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE course_group (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            leftTimeUnit REAL NOT NULL
           )
         ''');
 
@@ -46,6 +56,39 @@ class DataBase {
     );
 
     return _db!;
+  }
+
+  // course group
+  Future<void> upsertCourseGroup(CourseGroup courseGroup) async {
+    final db = await getDb();
+    await db.insert(
+      'course_group',
+      courseGroup.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<CourseGroup?> getCourseGroup(String id) async {
+    final db = await getDb();
+    final List<Map<String, dynamic>> maps = await db.query(
+      'course_group',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return CourseGroup.fromJson(maps.first);
+    }
+    return null;
+  }
+
+  Future<List<CourseGroup>> getCourseGroups() async {
+    final db = await getDb();
+    final List<Map<String, dynamic>> maps = await db.query('course_group');
+
+    return List.generate(maps.length, (i) {
+      return CourseGroup.fromJson(maps[i]);
+    });
   }
 
   // course

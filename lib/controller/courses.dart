@@ -3,12 +3,14 @@ import 'package:daydayup/model/db.dart';
 import 'package:get/get.dart';
 
 class CoursesController extends GetxController {
+  final RxList<CourseGroup> courseGroups = <CourseGroup>[].obs;
   final RxList<Course> courses = <Course>[].obs;
   final RxMap<String, List<Lesson>> courseLessons = <String, List<Lesson>>{}.obs;
   final RxMap<String, CourseStatus> courseStatus = <String, CourseStatus>{}.obs;
 
   @override
   void onInit() async {
+    courseGroups.value = await DataBase().getCourseGroups();
     courses.value = await DataBase().getCourses();
     for (final course in courses) {
       courseLessons[course.id] = await DataBase().getLessons(course.id);
@@ -16,6 +18,21 @@ class CoursesController extends GetxController {
     }
 
     super.onInit();
+  }
+
+  CourseGroup getCourseGroup(String id) {
+    return courseGroups.firstWhere((courseGroup) => courseGroup.id == id);
+  }
+
+  Future<void> upsertCourseGroup(CourseGroup courseGroup) async {
+    await DataBase().upsertCourseGroup(courseGroup);
+
+    if (courseGroups.indexWhere((element) => element.id == courseGroup.id) == -1) {
+      courseGroups.add(courseGroup);
+    } else {
+      final index = courseGroups.indexWhere((element) => element.id == courseGroup.id);
+      courseGroups[index] = courseGroup;
+    }
   }
 
   Course getCourse(String id) {
@@ -38,19 +55,19 @@ class CoursesController extends GetxController {
 
   // lesson
   List<Lesson> getCourseLessons(String courseId) {
-    return courseLessons[courseId]!;
+    return courseLessons[courseId] ?? [];
   }
 }
 
 class CourseStatus {
-  int total;
+  // int total;
   int completed;
   int notStarted;
   int canceled;
   int notAttended;
 
   CourseStatus({
-    required this.total,
+    // required this.total,
     required this.completed,
     required this.notStarted,
     this.canceled = 0,
@@ -58,8 +75,9 @@ class CourseStatus {
   });
 
   factory CourseStatus.fromCourses(Course course, List<Lesson> lessons) {
+    // todo! different pattern, not the some.
     return CourseStatus(
-      total: course.pattern.courseLength,
+      // total: course.timeTable.courseLength,
       completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
       notStarted: lessons.where((lesson) => lesson.status == LessonStatus.notStarted).length,
       canceled: lessons.where((lesson) => lesson.status == LessonStatus.skipped).length,

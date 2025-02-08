@@ -71,6 +71,7 @@ class TextInputWidget extends StatelessWidget {
 }
 
 enum InputTitleEnum {
+  courseGroupName,
   courseName,
   courseDescription,
   userName,
@@ -79,6 +80,8 @@ enum InputTitleEnum {
 extension InputTitleEnumExtension on InputTitleEnum {
   String get title {
     switch (this) {
+      case InputTitleEnum.courseGroupName:
+        return '课程组名称';
       case InputTitleEnum.courseName:
         return '课程名称';
       case InputTitleEnum.courseDescription:
@@ -90,6 +93,8 @@ extension InputTitleEnumExtension on InputTitleEnum {
 
   IconData get icon {
     switch (this) {
+      case InputTitleEnum.courseGroupName:
+        return Icons.bookmarks_rounded;
       case InputTitleEnum.courseName:
         return Icons.class_;
       case InputTitleEnum.courseDescription:
@@ -101,6 +106,8 @@ extension InputTitleEnumExtension on InputTitleEnum {
 
   Color get color {
     switch (this) {
+      case InputTitleEnum.courseGroupName:
+        return Colors.orange;
       case InputTitleEnum.courseName:
         return Colors.red;
       case InputTitleEnum.courseDescription:
@@ -120,8 +127,8 @@ class NumberInputWidget extends StatelessWidget {
   });
   final focusNode = FocusNode();
   final NumberInputEnum title;
-  final int initialValue;
-  final void Function(int) onChanged;
+  final double initialValue;
+  final void Function(double) onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -163,13 +170,18 @@ class NumberInputWidget extends StatelessWidget {
                   focusNode: focusNode,
                   controller: TextEditingController(text: initialValue.toString()),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
                   decoration: InputDecoration(isDense: true),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                   onChanged: (value) {
                     print(value);
-                    onChanged(int.parse(value));
+                    try {
+                      var result = double.parse(value);
+                      onChanged(result);
+                    } catch (e) {
+                      return;
+                    }
                   },
                 ),
               ),
@@ -183,6 +195,7 @@ class NumberInputWidget extends StatelessWidget {
 
 enum NumberInputEnum {
   courseLength,
+  courseGroupTimeUnit,
 }
 
 extension NumberInputEnumExtension on NumberInputEnum {
@@ -190,6 +203,8 @@ extension NumberInputEnumExtension on NumberInputEnum {
     switch (this) {
       case NumberInputEnum.courseLength:
         return '课程节数';
+      case NumberInputEnum.courseGroupTimeUnit:
+        return '剩余课时单位';
     }
   }
 
@@ -197,12 +212,16 @@ extension NumberInputEnumExtension on NumberInputEnum {
     switch (this) {
       case NumberInputEnum.courseLength:
         return Icons.repeat_rounded;
+      case NumberInputEnum.courseGroupTimeUnit:
+        return Icons.more_time_rounded;
     }
   }
 
   Color get color {
     switch (this) {
       case NumberInputEnum.courseLength:
+        return Colors.red;
+      case NumberInputEnum.courseGroupTimeUnit:
         return Colors.red;
     }
   }

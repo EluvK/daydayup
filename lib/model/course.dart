@@ -31,6 +31,16 @@ class UserConverter implements JsonConverter<User, String> {
   String toJson(User user) => jsonEncode(user.toJson());
 }
 
+class CourseTimeTableConverter implements JsonConverter<CourseTimeTable, String> {
+  const CourseTimeTableConverter();
+
+  @override
+  CourseTimeTable fromJson(String json) => CourseTimeTable.fromJson(jsonDecode(json));
+
+  @override
+  String toJson(CourseTimeTable timeTable) => jsonEncode(timeTable.toJson());
+}
+
 class PatternConverter implements JsonConverter<Pattern, String> {
   const PatternConverter();
 
@@ -42,13 +52,33 @@ class PatternConverter implements JsonConverter<Pattern, String> {
 }
 
 @JsonSerializable()
+class CourseGroup {
+  final String id;
+  String name;
+  double leftTimeUnit;
+
+  CourseGroup({
+    required this.id,
+    required this.name,
+    this.leftTimeUnit = 0,
+  });
+
+  factory CourseGroup.fromJson(Map<String, dynamic> json) => _$CourseGroupFromJson(json);
+  Map<String, dynamic> toJson() => _$CourseGroupToJson(this);
+}
+
+@JsonSerializable()
 class Course {
   final String id;
   String name;
+  String? groupId;
 
   @UserConverter()
   User user;
   String description;
+
+  @CourseTimeTableConverter()
+  CourseTimeTable timeTable;
 
   @PatternConverter()
   Pattern pattern;
@@ -59,8 +89,10 @@ class Course {
   Course({
     required this.id,
     required this.name,
+    this.groupId,
     required this.user,
     required this.description,
+    required this.timeTable,
     required this.pattern,
     required this.color,
   });
@@ -95,19 +127,31 @@ class Lesson {
 }
 
 @JsonSerializable()
-class Pattern {
+class CourseTimeTable {
   DateTime startDate;
   List<String> daysOfWeek;
   DateTime lessonStartTime;
   Duration duration;
-  int courseLength;
 
-  Pattern({
+  CourseTimeTable({
     required this.startDate,
     required this.daysOfWeek,
     required this.lessonStartTime,
     required this.duration,
-    required this.courseLength,
+  });
+
+  factory CourseTimeTable.fromJson(Map<String, dynamic> json) => _$CourseTimeTableFromJson(json);
+  Map<String, dynamic> toJson() => _$CourseTimeTableToJson(this);
+}
+
+@JsonSerializable()
+class Pattern {
+  PatternType type;
+  double value;
+
+  Pattern({
+    required this.type,
+    required this.value,
   });
 
   factory Pattern.fromJson(Map<String, dynamic> json) => _$PatternFromJson(json);
@@ -141,4 +185,12 @@ enum LessonStatus {
   skipped, // Lesson is in the past and has not been attended
   @JsonValue(302)
   notAttended, // Lesson is in the past and has not been attended
+}
+
+@JsonEnum()
+enum PatternType {
+  @JsonValue(100)
+  eachSingleLesson,
+  @JsonValue(200)
+  costClassTimeUnit,
 }
