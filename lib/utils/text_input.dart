@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TextInputWidget extends StatelessWidget {
   TextInputWidget({
@@ -22,7 +23,7 @@ class TextInputWidget extends StatelessWidget {
           focusNode.requestFocus();
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
           child: Row(
             children: [
               Material(
@@ -52,10 +53,9 @@ class TextInputWidget extends StatelessWidget {
                 child: TextField(
                   focusNode: focusNode,
                   controller: TextEditingController(text: initialValue),
-                  decoration: InputDecoration(
-                      // border: OutlineInputBorder(),
-                      // labelText: 'Enter your username',
-                      ),
+                  decoration: InputDecoration(isDense: true, contentPadding: EdgeInsets.all(8)),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                   onChanged: (value) {
                     print(value);
                     onChanged(value);
@@ -107,6 +107,103 @@ extension InputTitleEnumExtension on InputTitleEnum {
         return Colors.blue;
       case InputTitleEnum.userName:
         return Colors.green;
+    }
+  }
+}
+
+class NumberInputWidget extends StatelessWidget {
+  NumberInputWidget({
+    super.key,
+    required this.title,
+    required this.initialValue,
+    required this.onChanged,
+  });
+  final focusNode = FocusNode();
+  final NumberInputEnum title;
+  final int initialValue;
+  final void Function(int) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          focusNode.requestFocus();
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
+          child: Row(
+            children: [
+              Material(
+                color: title.color,
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  height: 32,
+                  width: 32,
+                  child: Center(
+                    child: Icon(
+                      title.icon,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  title.title,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              Flexible(
+                flex: 1,
+                child: TextField(
+                  focusNode: focusNode,
+                  controller: TextEditingController(text: initialValue.toString()),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(isDense: true),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                  onChanged: (value) {
+                    print(value);
+                    onChanged(int.parse(value));
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum NumberInputEnum {
+  courseLength,
+}
+
+extension NumberInputEnumExtension on NumberInputEnum {
+  String get title {
+    switch (this) {
+      case NumberInputEnum.courseLength:
+        return '课程节数';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case NumberInputEnum.courseLength:
+        return Icons.repeat_rounded;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case NumberInputEnum.courseLength:
+        return Colors.red;
     }
   }
 }

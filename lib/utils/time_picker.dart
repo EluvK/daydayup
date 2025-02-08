@@ -66,7 +66,7 @@ class TimePickerWidget extends StatelessWidget {
           }
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
           child: Row(
             children: [
               Material(
@@ -139,9 +139,9 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
       case TimeTitleEnum.courseFirstDayTime:
         return Icons.calendar_month;
       case TimeTitleEnum.courseStartTime:
-        return Icons.schedule_rounded;
+        return Icons.vertical_align_top_rounded;
       case TimeTitleEnum.courseEndTime:
-        return Icons.schedule_rounded;
+        return Icons.vertical_align_bottom_rounded;
     }
   }
 
@@ -237,7 +237,7 @@ class DurationPickerWidget extends StatelessWidget {
           }
         },
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
           child: Row(children: [
             Material(
               color: Colors.pink,

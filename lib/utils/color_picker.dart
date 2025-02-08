@@ -65,7 +65,7 @@ class ColorPickerWidget extends StatelessWidget {
           onChanged(newColor);
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
           child: Row(
             children: [
               Material(

@@ -2,6 +2,7 @@ import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/color_picker.dart';
+import 'package:daydayup/utils/day_of_week_picker.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
 import 'package:daydayup/utils/user_picker.dart';
@@ -80,10 +81,17 @@ class _EditCourseInner extends StatefulWidget {
 class __EditCourseInnerState extends State<_EditCourseInner> {
   final settingController = Get.find<SettingController>();
 
+  final RxList<String> dynamicDayOfWeek = <String>[].obs;
+
+  @override
+  void initState() {
+    dynamicDayOfWeek.value = widget.course.pattern.daysOfWeek;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      spacing: 10.0,
+    return ListView(
       children: [
         TextInputWidget(
           title: InputTitleEnum.courseName,
@@ -122,6 +130,12 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           timeTitle: TimeTitleEnum.courseFirstDayTime,
           onChange: (date) {
             widget.course.pattern.startDate = date;
+            setState(() {
+              var dayOfWeek = getDayOfWeek(date);
+              print('day of week: $dayOfWeek');
+              dynamicDayOfWeek.value = [dayOfWeek];
+              widget.course.pattern.daysOfWeek = [dayOfWeek];
+            });
           },
           initialValue: widget.course.pattern.startDate,
         ),
@@ -154,7 +168,22 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           },
           initialValue: widget.course.pattern.lessonStartTime.add(widget.course.pattern.duration),
         ),
-        // 课时
+        NumberInputWidget(
+          title: NumberInputEnum.courseLength,
+          initialValue: widget.course.pattern.courseLength,
+          onChanged: (value) {
+            widget.course.pattern.courseLength = value;
+          },
+        ),
+        // 其它统计方式?
+        DayOfWeekPickerWidget(
+          initialSelectedDays: dynamicDayOfWeek,
+          onChanged: (days) {
+            print('day of week: $days');
+            widget.course.pattern.daysOfWeek = days;
+            // recalculate course day of week
+          },
+        ),
         Divider(),
         ElevatedButton(
           onPressed: () {

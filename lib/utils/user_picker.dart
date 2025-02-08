@@ -34,7 +34,7 @@ class _UserPickerState extends State<UserPicker> {
     return Material(
       color: Colors.transparent,
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
         child: Row(
           children: [
             Material(
