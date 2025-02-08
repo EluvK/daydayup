@@ -80,12 +80,15 @@ class _EditCourseInner extends StatefulWidget {
 
 class __EditCourseInnerState extends State<_EditCourseInner> {
   final settingController = Get.find<SettingController>();
+  final coursesController = Get.find<CoursesController>();
 
   final RxList<String> dynamicDayOfWeek = <String>[].obs;
+  final RxList<Lesson> lessons = <Lesson>[].obs;
 
   @override
   void initState() {
     dynamicDayOfWeek.value = widget.course.pattern.daysOfWeek;
+    lessons.value = coursesController.getCourseLessons(widget.course.id);
     super.initState();
   }
 
@@ -199,6 +202,9 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           child: Text('保存课程信息'),
         ),
         Divider(),
+        // todo view course status
+       
+        // todo view lesson list
       ],
     );
   }

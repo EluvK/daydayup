@@ -35,6 +35,11 @@ class CoursesController extends GetxController {
     courseLessons[course.id] = lessons;
     courseStatus[course.id] = CourseStatus.fromCourses(course, lessons);
   }
+
+  // lesson
+  List<Lesson> getCourseLessons(String courseId) {
+    return courseLessons[courseId]!;
+  }
 }
 
 class CourseStatus {
