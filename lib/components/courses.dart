@@ -67,12 +67,51 @@ class _CoursesTableState extends State<CoursesTable> {
         Expanded(
           child: Obx(() {
             var courses = coursesController.courses;
-            return ListView.builder(
-              itemCount: courses.length,
-              itemBuilder: (context, index) {
-                var course = courses[index];
-                return _buildCourseTile(course);
-              },
+            var courseGroups = coursesController.courseGroups;
+
+            final Map<String, List<Course>> groupCourses = {};
+            List<Course> noGroupCourses = [];
+
+            for (var group in courseGroups) {
+              groupCourses[group.id] = [];
+            }
+            for (var course in courses) {
+              if (course.groupId == null) {
+                noGroupCourses.add(course);
+              } else {
+                groupCourses.putIfAbsent(course.groupId!, () => []).add(course);
+              }
+            }
+            print('groupCourses: $groupCourses');
+            print('noGroupCourses: $noGroupCourses');
+
+            print('courses: $courses');
+
+            return ListView(
+              children: [
+                groupCourses.entries
+                    .map(
+                      (e) => ExpansionTile(
+                        initiallyExpanded: true,
+                        childrenPadding: const EdgeInsets.only(bottom: 8),
+                        title: Text(courseGroups.firstWhere((element) => element.id == e.key).name),
+                        children: e.value.map((e) => _buildCourseTile(e)).toList(),
+                      ),
+                    )
+                    .toList(),
+                if (noGroupCourses.isNotEmpty)
+                  [
+                    // Divider(),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: noGroupCourses.length,
+                      itemBuilder: (context, index) {
+                        var course = noGroupCourses[index];
+                        return _buildCourseTile(course);
+                      },
+                    )
+                  ],
+              ].expand((element) => element).toList(),
             );
           }),
         ),

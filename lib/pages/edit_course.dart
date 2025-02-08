@@ -110,6 +110,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           },
           initialValue: widget.course.description,
         ),
+        _buildCourseGroupSelector(),
         UserPicker(
           onChanged: (selectedUserIds) {
             print("onChanged: $selectedUserIds");
@@ -205,6 +206,79 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
         // todo view lesson list
       ],
+    );
+  }
+
+  Widget _buildCourseGroupSelector() {
+    if (coursesController.courseGroups.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    var focusNode = FocusNode();
+    var items = coursesController.courseGroups.map<DropdownMenuItem<String>>((CourseGroup group) {
+      return DropdownMenuItem<String>(
+        value: group.id,
+        child: Text(group.name),
+      );
+    }).toList();
+    items.add(DropdownMenuItem<String>(
+      value: null,
+      child: Text('🚫不关联'),
+    ));
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          focusNode.requestFocus();
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
+          child: Row(
+            children: [
+              Material(
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(8),
+                child: const SizedBox(
+                  height: 32,
+                  width: 32,
+                  child: Center(
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                // flex: 1,
+                child: Text(
+                  '课程组',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: 36),
+                  child: DropdownButton<String>(
+                    value: widget.course.groupId,
+                    focusNode: FocusNode(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        widget.course.groupId = newValue;
+                      });
+                    },
+                    icon: const Icon(Icons.arrow_drop_down),
+                    isDense: true,
+                    items: items,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

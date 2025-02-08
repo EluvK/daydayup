@@ -62,7 +62,7 @@ class _UserPickerState extends State<UserPicker> {
             Flexible(
                 flex: 3,
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: 56),
+                  constraints: BoxConstraints(maxHeight: 32),
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
@@ -90,26 +90,26 @@ class _UserPickerState extends State<UserPicker> {
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOut,
-                            padding: const EdgeInsets.all(8),
-                            margin: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
                             // width: 120,
                             // height: 50,
                             decoration: BoxDecoration(
                               border: Border.all(
                                 color:
                                     selectedUserIds.contains(user.id) ? user.color.withAlpha(200) : Colors.transparent,
-                                width: 2,
+                                width: 1,
                               ),
                               boxShadow: [
                                 if (selectedUserIds.contains(user.id))
                                   BoxShadow(
                                     color: user.color.withAlpha(120),
-                                    spreadRadius: 3,
+                                    spreadRadius: 2,
                                     blurRadius: 1,
                                   ),
                               ],
                               color: user.color.withAlpha(100),
-                              borderRadius: BorderRadius.circular(12), // 调整圆角大小
+                              borderRadius: BorderRadius.circular(8), // 调整圆角大小
                             ),
                             child: Center(
                               child: Text(
