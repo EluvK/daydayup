@@ -7,11 +7,13 @@ class UserPicker extends StatefulWidget {
     this.allowMultiple = false,
     required this.onChanged,
     required this.candidateUsers,
+    required this.initialUser,
   });
 
   final bool allowMultiple;
   final void Function(List<String>) onChanged;
   final List<User> candidateUsers;
+  final List<User> initialUser;
 
   @override
   State<UserPicker> createState() => _UserPickerState();
@@ -22,11 +24,7 @@ class _UserPickerState extends State<UserPicker> {
 
   @override
   void initState() {
-    if (widget.allowMultiple) {
-      selectedUserIds = widget.candidateUsers.map((e) => e.id).toList();
-    } else {
-      selectedUserIds = [widget.candidateUsers.first.id];
-    }
+    selectedUserIds = widget.initialUser.map((e) => e.id).toList();
     super.initState();
   }
 
@@ -64,7 +62,7 @@ class _UserPickerState extends State<UserPicker> {
             Flexible(
                 flex: 3,
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: 60),
+                  constraints: BoxConstraints(maxHeight: 56),
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
@@ -92,10 +90,10 @@ class _UserPickerState extends State<UserPicker> {
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOut,
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(8),
                             margin: const EdgeInsets.all(4),
                             // width: 120,
-                            // height: 60,
+                            // height: 50,
                             decoration: BoxDecoration(
                               border: Border.all(
                                 color:
@@ -106,8 +104,8 @@ class _UserPickerState extends State<UserPicker> {
                                 if (selectedUserIds.contains(user.id))
                                   BoxShadow(
                                     color: user.color.withAlpha(120),
-                                    spreadRadius: 4,
-                                    blurRadius: 5,
+                                    spreadRadius: 3,
+                                    blurRadius: 1,
                                   ),
                               ],
                               color: user.color.withAlpha(100),

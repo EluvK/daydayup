@@ -47,8 +47,14 @@ class _EditCourseState extends State<EditCourse> {
         name: '',
         user: settingController.getDefaultUser(),
         description: '',
-        pattern: Pattern(startDate: DateTime.now(), daysOfWeek: [], duration: Duration(hours: 2), courseLength: 10),
-        color: RandomColor.getColorObject(Options()),
+        pattern: Pattern(
+          startDate: DateTime.now(),
+          daysOfWeek: [],
+          lessonStartTime: DateTime.now(),
+          duration: Duration(hours: 2),
+          courseLength: 10,
+        ),
+        color: RandomColor.getColorObject(Options(luminosity: Luminosity.dark)),
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),
@@ -99,12 +105,18 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             widget.course.user = settingController.users.firstWhere((element) => element.id == selectedUserIds.first);
           },
           candidateUsers: settingController.users,
+          initialUser: [widget.course.user],
         ),
         ColorPickerWidget(
           onChanged: (color) {
             widget.course.color = color;
           },
           initialColor: widget.course.color,
+        ),
+        Divider(),
+        Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Align(alignment: Alignment.centerLeft, child: Text('时间记录')),
         ),
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseFirstDayTime,
@@ -113,6 +125,37 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           },
           initialValue: widget.course.pattern.startDate,
         ),
+        TimePickerWidget(
+          timeTitle: TimeTitleEnum.courseStartTime,
+          onChange: (date) {
+            widget.course.pattern.lessonStartTime = date;
+            // recalculate course end time
+            setState(() {});
+          },
+          initialValue: widget.course.pattern.lessonStartTime,
+        ),
+        DurationPickerWidget(
+          initialValue: widget.course.pattern.duration,
+          onChange: (duration) {
+            print('get duration: $duration');
+            widget.course.pattern.duration = duration;
+            // recalculate course end time
+            setState(() {});
+          },
+        ),
+        TimePickerWidget(
+          timeTitle: TimeTitleEnum.courseEndTime,
+          onChange: (date) {
+            print('set end time: $date');
+            // recalculate course length
+            widget.course.pattern.duration = date.difference(widget.course.pattern.lessonStartTime);
+            print('course length: ${widget.course.pattern.duration}');
+            setState(() {});
+          },
+          initialValue: widget.course.pattern.lessonStartTime.add(widget.course.pattern.duration),
+        ),
+        // 课时
+        Divider(),
         ElevatedButton(
           onPressed: () {
             final courseController = Get.find<CoursesController>();
@@ -124,8 +167,9 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             );
             Get.back();
           },
-          child: Text('Save'),
+          child: Text('保存课程信息'),
         ),
+        Divider(),
       ],
     );
   }

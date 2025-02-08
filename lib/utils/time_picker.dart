@@ -39,12 +39,13 @@ class TimePickerWidget extends StatelessWidget {
               pickerFormat: PickerFormat.ymd,
               // boardTitle: 'Board Picker',
               // pickerSubTitles: BoardDateTimeItemTitles(year: 'year'),
-              withSecond: DateTimePickerType.time == pickerType,
-              customOptions: DateTimePickerType.time == pickerType
-                  ? BoardPickerCustomOptions(
-                      seconds: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
-                    )
-                  : null,
+              withSecond: false,
+              // withSecond: DateTimePickerType.time == pickerType,
+              // customOptions: DateTimePickerType.time == pickerType
+              //     ? BoardPickerCustomOptions(
+              //         seconds: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
+              //       )
+              //     : null,
             ),
             // Specify if you want changes in the picker to take effect immediately.
             valueNotifier: date,
@@ -94,8 +95,8 @@ class TimePickerWidget extends StatelessWidget {
                 builder: (context, data, _) {
                   return Text(
                     BoardDateFormat(pickerType.formatter(
-                      withSecond: DateTimePickerType.time == pickerType,
-                    )).format(data),
+                        // withSecond: DateTimePickerType.time == pickerType,
+                        )).format(data),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -136,7 +137,7 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
       case TimeTitleEnum.lessonDateTime:
         return Icons.schedule_rounded;
       case TimeTitleEnum.courseFirstDayTime:
-        return Icons.schedule_rounded;
+        return Icons.calendar_month;
       case TimeTitleEnum.courseStartTime:
         return Icons.schedule_rounded;
       case TimeTitleEnum.courseEndTime:
@@ -151,9 +152,9 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
       case TimeTitleEnum.courseFirstDayTime:
         return Colors.pink;
       case TimeTitleEnum.courseStartTime:
-        return Colors.pink;
+        return Colors.green;
       case TimeTitleEnum.courseEndTime:
-        return Colors.pink;
+        return Colors.green;
     }
   }
 
@@ -192,5 +193,87 @@ extension DateTimePickerTypeExtension on DateTimePickerType {
       case DateTimePickerType.time:
         return withSecond ? 'HH:mm:ss' : 'HH:mm';
     }
+  }
+}
+
+// Duration Picker
+class DurationPickerWidget extends StatelessWidget {
+  DurationPickerWidget({super.key, required this.initialValue, required this.onChange});
+
+  final Duration initialValue;
+  final void Function(Duration) onChange;
+
+  late final ValueNotifier<Duration> duration = ValueNotifier(initialValue);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          final resultDateTime = await showBoardDateTimePickerForTime(
+            context: context,
+            initialDate: DateTime.now().copyWith(
+              hour: initialValue.inHours,
+              minute: initialValue.inMinutes.remainder(60),
+            ),
+            onResult: (BoardTimeResult result) {
+              duration.value = Duration(hours: result.hour, minutes: result.minute);
+              onChange(duration.value);
+            },
+            options: BoardDateTimeOptions(
+              pickerSubTitles: BoardDateTimeItemTitles(
+                hour: '小时',
+                minute: '分钟',
+              ),
+              customOptions: BoardPickerCustomOptions(
+                minutes: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
+              ),
+            ),
+          );
+          if (resultDateTime != null) {
+            duration.value = Duration(hours: resultDateTime.hour, minutes: resultDateTime.minute);
+            onChange(duration.value);
+          }
+        },
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Row(children: [
+            Material(
+              color: Colors.pink,
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                height: 32,
+                width: 32,
+                child: Center(
+                  child: Icon(
+                    Icons.schedule_rounded,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '课程时长',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            ValueListenableBuilder(
+              valueListenable: duration,
+              builder: (context, data, _) {
+                return Text(
+                  '${data.inHours}小时${data.inMinutes.remainder(60)}分钟',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                );
+              },
+            ),
+          ]),
+        ),
+      ),
+    );
   }
 }

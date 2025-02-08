@@ -56,6 +56,7 @@ Pattern _$PatternFromJson(Map<String, dynamic> json) => Pattern(
       daysOfWeek: (json['daysOfWeek'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
+      lessonStartTime: DateTime.parse(json['lessonStartTime'] as String),
       duration: Duration(microseconds: (json['duration'] as num).toInt()),
       courseLength: (json['courseLength'] as num).toInt(),
     );
@@ -63,6 +64,7 @@ Pattern _$PatternFromJson(Map<String, dynamic> json) => Pattern(
 Map<String, dynamic> _$PatternToJson(Pattern instance) => <String, dynamic>{
       'startDate': instance.startDate.toIso8601String(),
       'daysOfWeek': instance.daysOfWeek,
+      'lessonStartTime': instance.lessonStartTime.toIso8601String(),
       'duration': instance.duration.inMicroseconds,
       'courseLength': instance.courseLength,
     };

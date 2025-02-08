@@ -98,12 +98,14 @@ class Lesson {
 class Pattern {
   DateTime startDate;
   List<String> daysOfWeek;
+  DateTime lessonStartTime;
   Duration duration;
   int courseLength;
 
   Pattern({
     required this.startDate,
     required this.daysOfWeek,
+    required this.lessonStartTime,
     required this.duration,
     required this.courseLength,
   });

@@ -94,8 +94,8 @@ class ColorPickerWidget extends StatelessWidget {
                 valueListenable: color,
                 builder: (context, color, _) {
                   return ColorIndicator(
-                    width: 40,
-                    height: 40,
+                    width: 32,
+                    height: 32,
                     borderRadius: 8,
                     color: color,
                   );
