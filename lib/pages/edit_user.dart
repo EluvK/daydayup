@@ -1,6 +1,7 @@
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/text_input.dart';
+import 'package:daydayup/utils/color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_randomcolor/flutter_randomcolor.dart';
 import 'package:get/get.dart';
@@ -75,8 +76,13 @@ class __EditUserInnerState extends State<_EditUserInner> {
           },
           initialValue: widget.user.name,
         ),
-        // todo add color picker
-
+        ColorPickerWidget(
+          onChanged: (value) {
+            // print(value);
+            widget.user.color = value;
+          },
+          initialColor: widget.user.color,
+        ),
         ElevatedButton(
           onPressed: () {
             settingController.upsertUser(widget.user);

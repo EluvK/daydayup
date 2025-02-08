@@ -1,6 +1,7 @@
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/color_picker.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
 import 'package:daydayup/utils/user_picker.dart';
@@ -8,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_randomcolor/flutter_randomcolor.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
-import 'package:board_datetime_picker/board_datetime_picker.dart';
 
 class EditCoursePage extends StatelessWidget {
   const EditCoursePage({super.key});
@@ -100,16 +100,19 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           },
           candidateUsers: settingController.users,
         ),
-        // todo course color
+        ColorPickerWidget(
+          onChanged: (color) {
+            widget.course.color = color;
+          },
+          initialColor: widget.course.color,
+        ),
         TimePickerWidget(
-          timeTitle: TimeTitleEnum.firstTime,
-          pickerType: DateTimePickerType.datetime,
+          timeTitle: TimeTitleEnum.courseFirstDayTime,
           onChange: (date) {
             widget.course.pattern.startDate = date;
           },
           initialValue: widget.course.pattern.startDate,
         ),
-
         ElevatedButton(
           onPressed: () {
             final courseController = Get.find<CoursesController>();
