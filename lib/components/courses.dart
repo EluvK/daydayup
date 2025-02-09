@@ -10,7 +10,7 @@ class Courses extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Courses'),
+        title: Text('课程列表'),
         actions: [
           // PopupMenuButton<String>(icon: Icon(Icons.add), itemBuilder: itemBuilder),
           PopupMenuButton<String>(
@@ -97,8 +97,9 @@ class _CoursesTableState extends State<CoursesTable> {
                         title: Text(courseGroups.firstWhere((element) => element.id == e.key).name),
                         trailing: IconButton(
                           icon: Icon(Icons.edit),
-                          onPressed: () {
-                            Get.toNamed('/edit-course-group', arguments: [e.key]);
+                          onPressed: () async {
+                            await Get.toNamed('/edit-course-group', arguments: [e.key]);
+                            setState(() {});
                           },
                         ),
                         children: e.value.isEmpty
@@ -142,8 +143,9 @@ class _CoursesTableState extends State<CoursesTable> {
           title: Text(course.name),
           subtitle: Text("${course.timeTable.startDate.toString()} (${course.description})"),
           textColor: course.color,
-          onTap: () {
-            Get.toNamed('/edit-course', arguments: [course.id]);
+          onTap: () async {
+            await Get.toNamed('/edit-course', arguments: [course.id]);
+            setState(() {});
           },
         ),
       ),

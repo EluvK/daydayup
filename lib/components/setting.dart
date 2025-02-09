@@ -10,7 +10,7 @@ class Setting extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Setting'),
+        title: Text('设置'),
       ),
       body: ListView(
         children: [
@@ -50,11 +50,8 @@ class _UserSettingState extends State<UserSetting> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Text(
-                'User Setting',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                '用户列表',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               Row(
                 children: [

@@ -100,6 +100,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   Widget build(BuildContext context) {
     return ListView(
       children: [
+        // 基本信息
         Align(alignment: Alignment.topLeft, child: Text('基本信息')),
         TextInputWidget(
           title: InputTitleEnum.courseName,
@@ -131,6 +132,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         ),
         Divider(),
 
+        // 计费方式
         Align(
             alignment: Alignment.topLeft,
             child: Row(
@@ -147,7 +149,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                     widget.course.pattern.type = newSelection.first;
                     if (widget.course.pattern.type == PatternType.costClassTimeUnit) {
                       widget.course.pattern.value = 1;
-                    }else {
+                    } else {
                       widget.course.pattern.value = 10;
                     }
                     setState(() {});
@@ -155,13 +157,13 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                 ),
               ],
             )),
-
         if (widget.course.pattern.type == PatternType.costClassTimeUnit)
           for (var i in _buildCourseGroupInfo()) i,
         if (widget.course.pattern.type == PatternType.eachSingleLesson)
           for (var i in _buildSingleCourseInfo()) i,
-
         Divider(),
+
+        // 时间周期
         Align(alignment: Alignment.topLeft, child: Text('时间周期')),
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseFirstDayTime,
@@ -202,14 +204,6 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           },
           initialValue: widget.course.timeTable.lessonStartTime.add(widget.course.timeTable.duration),
         ),
-        // NumberInputWidget(
-        //   title: NumberInputEnum.courseLength,
-        //   initialValue: widget.course.timeTable.courseLength,
-        //   onChanged: (value) {
-        //     widget.course.timeTable.courseLength = value;
-        //   },
-        // ),
-        // 其它统计方式?
         DayOfWeekPickerWidget(
           initialSelectedDays: dynamicDayOfWeek,
           onChanged: (days) {
@@ -219,14 +213,15 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           },
         ),
         Divider(),
+
+        // 保存
         ElevatedButton(
           onPressed: () {
             if (validateUserInput()) {
               coursesController.upsertCourse(
                 widget.course,
-                [
-                  // todo,
-                ],
+                // todo, make a preview of the lessons
+                reCalculateLessonsForEachSingle(lessons, widget.course),
               );
               Get.back();
             }
@@ -234,6 +229,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           child: Text('保存课程信息'),
         ),
         Divider(),
+
         // todo view course status
 
         // todo view lesson list
@@ -344,14 +340,14 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         child: Row(
           children: [
             Material(
-              color: Colors.blue,
+              color: Colors.orange,
               borderRadius: BorderRadius.circular(8),
               child: const SizedBox(
                 height: 32,
                 width: 32,
                 child: Center(
                   child: Icon(
-                    Icons.person,
+                    Icons.bookmarks_rounded,
                     color: Colors.white,
                   ),
                 ),
@@ -387,4 +383,46 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
       ),
     );
   }
+}
+
+List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course course) {
+  var resultLessons = <Lesson>[];
+  var nowTime = DateTime.now();
+  var takedCount = 0;
+
+  currentLessons.sort((a, b) => a.startTime.compareTo(b.startTime));
+  for (var lesson in currentLessons) {
+    // the past shall not be modified by this function
+    if (lesson.status != LessonStatus.notStarted && lesson.endTime.isBefore(nowTime)) {
+      resultLessons.add(lesson);
+    }
+    if (lesson.status != LessonStatus.notStarted || lesson.status != LessonStatus.canceled) {
+      takedCount++;
+    }
+  }
+  var futureCount = course.pattern.value.toInt() - takedCount;
+
+  int generateCount = 0;
+  DateTime courseDate = currentLessons.isEmpty ? course.timeTable.startDate : currentLessons.last.endTime;
+  while (generateCount < futureCount) {
+    if (course.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))) {
+      var startTime = courseDate.copyWith(
+          hour: course.timeTable.lessonStartTime.hour, minute: course.timeTable.lessonStartTime.minute);
+      resultLessons.add(Lesson(
+        id: currentLessons.firstWhereOrNull((element) => element.startTime == startTime)?.id ?? const Uuid().v4(),
+        name: "${course.name} @ ${resultLessons.length + 1}",
+        user: course.user,
+        courseId: course.id,
+        startTime: startTime,
+        endTime: courseDate
+            .copyWith(hour: course.timeTable.lessonStartTime.hour, minute: course.timeTable.lessonStartTime.minute)
+            .add(course.timeTable.duration),
+        status: LessonStatus.notStarted,
+      ));
+      generateCount++;
+    }
+    courseDate = courseDate.add(const Duration(days: 1));
+  }
+
+  return resultLessons;
 }

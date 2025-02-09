@@ -214,7 +214,7 @@ enum LessonStatus {
   @JsonValue(200)
   finished, // Lesson is in the past and has been attended
   @JsonValue(301)
-  skipped, // Lesson is in the past and has not been attended
+  canceled, // Lesson is in the past and has not been attended
   @JsonValue(302)
   notAttended, // Lesson is in the past and has not been attended
 }

@@ -36,6 +36,7 @@ class DataBase {
             user TEXT NOT NULL,
             startTime TEXT NOT NULL,
             endTime TEXT NOT NULL,
+            status INTEGER NOT NULL,
             PRIMARY KEY (courseId, id)
           )
         ''');

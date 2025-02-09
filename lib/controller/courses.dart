@@ -94,7 +94,7 @@ class CourseStatus {
       // total: course.timeTable.courseLength,
       completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
       notStarted: lessons.where((lesson) => lesson.status == LessonStatus.notStarted).length,
-      canceled: lessons.where((lesson) => lesson.status == LessonStatus.skipped).length,
+      canceled: lessons.where((lesson) => lesson.status == LessonStatus.canceled).length,
       notAttended: lessons.where((lesson) => lesson.status == LessonStatus.notAttended).length,
     );
   }

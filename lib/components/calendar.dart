@@ -13,7 +13,7 @@ class Calendar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calendar'),
+        title: const Text('日历'),
       ),
       body: const CalendarTable(),
       // floatingActionButton: FloatingActionButton(

@@ -10,19 +10,16 @@ CourseGroup _$CourseGroupFromJson(Map<String, dynamic> json) => CourseGroup(
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String,
-    )..billIds =
-        const ListStringConverter().fromJson(json['billIds'] as String);
+    )..billIds = const ListStringConverter().fromJson(json['billIds'] as String);
 
-Map<String, dynamic> _$CourseGroupToJson(CourseGroup instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$CourseGroupToJson(CourseGroup instance) => <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
       'description': instance.description,
       'billIds': const ListStringConverter().toJson(instance.billIds),
     };
 
-CourseGroupBill _$CourseGroupBillFromJson(Map<String, dynamic> json) =>
-    CourseGroupBill(
+CourseGroupBill _$CourseGroupBillFromJson(Map<String, dynamic> json) => CourseGroupBill(
       id: json['id'] as String,
       groupId: json['groupId'] as String,
       description: json['description'] as String,
@@ -30,8 +27,7 @@ CourseGroupBill _$CourseGroupBillFromJson(Map<String, dynamic> json) =>
       amount: (json['amount'] as num).toDouble(),
     );
 
-Map<String, dynamic> _$CourseGroupBillToJson(CourseGroupBill instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$CourseGroupBillToJson(CourseGroupBill instance) => <String, dynamic>{
       'id': instance.id,
       'groupId': instance.groupId,
       'description': instance.description,
@@ -45,8 +41,7 @@ Course _$CourseFromJson(Map<String, dynamic> json) => Course(
       groupId: json['groupId'] as String?,
       user: const UserConverter().fromJson(json['user'] as String),
       description: json['description'] as String,
-      timeTable: const CourseTimeTableConverter()
-          .fromJson(json['timeTable'] as String),
+      timeTable: const CourseTimeTableConverter().fromJson(json['timeTable'] as String),
       pattern: const PatternConverter().fromJson(json['pattern'] as String),
       color: const ColorConverter().fromJson((json['color'] as num).toInt()),
     );
@@ -85,22 +80,18 @@ Map<String, dynamic> _$LessonToJson(Lesson instance) => <String, dynamic>{
 const _$LessonStatusEnumMap = {
   LessonStatus.notStarted: 100,
   LessonStatus.finished: 200,
-  LessonStatus.skipped: 301,
+  LessonStatus.canceled: 301,
   LessonStatus.notAttended: 302,
 };
 
-CourseTimeTable _$CourseTimeTableFromJson(Map<String, dynamic> json) =>
-    CourseTimeTable(
+CourseTimeTable _$CourseTimeTableFromJson(Map<String, dynamic> json) => CourseTimeTable(
       startDate: DateTime.parse(json['startDate'] as String),
-      daysOfWeek: (json['daysOfWeek'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      daysOfWeek: (json['daysOfWeek'] as List<dynamic>).map((e) => e as String).toList(),
       lessonStartTime: DateTime.parse(json['lessonStartTime'] as String),
       duration: Duration(microseconds: (json['duration'] as num).toInt()),
     );
 
-Map<String, dynamic> _$CourseTimeTableToJson(CourseTimeTable instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$CourseTimeTableToJson(CourseTimeTable instance) => <String, dynamic>{
       'startDate': instance.startDate.toIso8601String(),
       'daysOfWeek': instance.daysOfWeek,
       'lessonStartTime': instance.lessonStartTime.toIso8601String(),
