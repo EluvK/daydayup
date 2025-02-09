@@ -20,7 +20,7 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
   }
 
   String concatSelectedDays() {
-    return '每${selectedDays.join('、')}上课';
+    return '每${selectedDays.isEmpty ? ' .. ' : selectedDays.join('、')}上课';
   }
 
   @override

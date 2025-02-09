@@ -123,6 +123,15 @@ class DataBase {
     });
   }
 
+  Future<void> deleteCourseGroup(String id) async {
+    final db = await getDb();
+    await db.delete(
+      'course_group',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   // course
   Future<void> insertCourse(Course course) async {
     final db = await getDb();

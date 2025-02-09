@@ -195,6 +195,7 @@ class NumberInputWidget extends StatelessWidget {
 
 enum NumberInputEnum {
   courseLength,
+  courseCostClassTimeUnit,
   courseGroupBillAdd,
 }
 
@@ -203,6 +204,8 @@ extension NumberInputEnumExtension on NumberInputEnum {
     switch (this) {
       case NumberInputEnum.courseLength:
         return '课程节数';
+      case NumberInputEnum.courseCostClassTimeUnit:
+        return '每节课时';
       case NumberInputEnum.courseGroupBillAdd:
         return '补充课时';
     }
@@ -212,6 +215,8 @@ extension NumberInputEnumExtension on NumberInputEnum {
     switch (this) {
       case NumberInputEnum.courseLength:
         return Icons.repeat_rounded;
+      case NumberInputEnum.courseCostClassTimeUnit:
+        return Icons.attach_money_rounded;
       case NumberInputEnum.courseGroupBillAdd:
         return Icons.more_time_rounded;
     }
@@ -220,6 +225,8 @@ extension NumberInputEnumExtension on NumberInputEnum {
   Color get color {
     switch (this) {
       case NumberInputEnum.courseLength:
+        return Colors.red;
+      case NumberInputEnum.courseCostClassTimeUnit:
         return Colors.red;
       case NumberInputEnum.courseGroupBillAdd:
         return Colors.red;

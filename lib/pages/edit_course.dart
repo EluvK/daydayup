@@ -87,7 +87,11 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
   @override
   void initState() {
-    dynamicDayOfWeek.value = widget.course.timeTable.daysOfWeek;
+    if (widget.course.timeTable.daysOfWeek.isEmpty) {
+      updateDayOfWeek(widget.course.timeTable.startDate);
+    } else {
+      dynamicDayOfWeek.value = widget.course.timeTable.daysOfWeek;
+    }
     lessons.value = coursesController.getCourseLessons(widget.course.id);
     super.initState();
   }
@@ -96,6 +100,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   Widget build(BuildContext context) {
     return ListView(
       children: [
+        Align(alignment: Alignment.topLeft, child: Text('基本信息')),
         TextInputWidget(
           title: InputTitleEnum.courseName,
           onChanged: (value) {
@@ -110,7 +115,6 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           },
           initialValue: widget.course.description,
         ),
-        _buildCourseGroupSelector(),
         UserPicker(
           onChanged: (selectedUserIds) {
             print("onChanged: $selectedUserIds");
@@ -126,19 +130,45 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           initialColor: widget.course.color,
         ),
         Divider(),
-        Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: Align(alignment: Alignment.centerLeft, child: Text('时间记录')),
-        ),
+
+        Align(
+            alignment: Alignment.topLeft,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('计费方式'),
+                SegmentedButton(
+                  segments: [
+                    ButtonSegment<PatternType>(value: PatternType.eachSingleLesson, tooltip: '单节', label: Text('单节')),
+                    ButtonSegment<PatternType>(value: PatternType.costClassTimeUnit, tooltip: '课时', label: Text('课时')),
+                  ],
+                  selected: {widget.course.pattern.type},
+                  onSelectionChanged: (Set<PatternType> newSelection) {
+                    widget.course.pattern.type = newSelection.first;
+                    if (widget.course.pattern.type == PatternType.costClassTimeUnit) {
+                      widget.course.pattern.value = 1;
+                    }else {
+                      widget.course.pattern.value = 10;
+                    }
+                    setState(() {});
+                  },
+                ),
+              ],
+            )),
+
+        if (widget.course.pattern.type == PatternType.costClassTimeUnit)
+          for (var i in _buildCourseGroupInfo()) i,
+        if (widget.course.pattern.type == PatternType.eachSingleLesson)
+          for (var i in _buildSingleCourseInfo()) i,
+
+        Divider(),
+        Align(alignment: Alignment.topLeft, child: Text('时间周期')),
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseFirstDayTime,
           onChange: (date) {
             widget.course.timeTable.startDate = date;
             setState(() {
-              var dayOfWeek = getDayOfWeek(date);
-              print('day of week: $dayOfWeek');
-              dynamicDayOfWeek.value = [dayOfWeek];
-              widget.course.timeTable.daysOfWeek = [dayOfWeek];
+              updateDayOfWeek(date);
             });
           },
           initialValue: widget.course.timeTable.startDate,
@@ -191,13 +221,15 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         Divider(),
         ElevatedButton(
           onPressed: () {
-            coursesController.upsertCourse(
-              widget.course,
-              [
-                // todo,
-              ],
-            );
-            Get.back();
+            if (validateUserInput()) {
+              coursesController.upsertCourse(
+                widget.course,
+                [
+                  // todo,
+                ],
+              );
+              Get.back();
+            }
           },
           child: Text('保存课程信息'),
         ),
@@ -209,74 +241,148 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
     );
   }
 
+  void updateDayOfWeek(DateTime date) {
+    var dayOfWeek = getDayOfWeek(date);
+    print('day of week: $dayOfWeek');
+    dynamicDayOfWeek.value = [dayOfWeek];
+    widget.course.timeTable.daysOfWeek = [dayOfWeek];
+  }
+
+  bool validateUserInput() {
+    if (widget.course.name.isEmpty) {
+      Get.snackbar('❌ 错误', '课程名称不能为空');
+      return false;
+    }
+    if (widget.course.timeTable.daysOfWeek.isEmpty) {
+      Get.snackbar('❌ 错误', '请选择星期几上课');
+      return false;
+    }
+    switch (widget.course.pattern.type) {
+      case PatternType.costClassTimeUnit:
+        if (widget.course.groupId == null) {
+          Get.snackbar('❌ 错误', '请选择课程组');
+          return false;
+        }
+        break;
+      case PatternType.eachSingleLesson:
+        break;
+    }
+    if (widget.course.pattern.value <= 0) {
+      Get.snackbar('❌ 错误', '课时/节数应该大于0');
+      return false;
+    }
+    if (widget.course.timeTable.duration.inMinutes == 0) {
+      Get.snackbar('❌ 错误', '课程时长不应该为0');
+      return false;
+    }
+    return true;
+  }
+
+  List<Widget> _buildCourseGroupInfo() {
+    return [
+      _buildCourseGroupSelector(),
+      if (coursesController.courseGroups.isNotEmpty)
+        NumberInputWidget(
+          title: NumberInputEnum.courseCostClassTimeUnit,
+          initialValue: widget.course.pattern.value,
+          onChanged: (value) {
+            widget.course.pattern.value = value;
+          },
+        ),
+    ];
+  }
+
+  List<Widget> _buildSingleCourseInfo() {
+    return [
+      NumberInputWidget(
+        title: NumberInputEnum.courseLength,
+        initialValue: widget.course.pattern.value,
+        onChanged: (value) {
+          widget.course.pattern.value = value;
+        },
+      ),
+    ];
+  }
+
   Widget _buildCourseGroupSelector() {
     if (coursesController.courseGroups.isEmpty) {
-      return const SizedBox.shrink();
+      return Align(
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            Text('还没有课程组，请先创建课程组', style: Theme.of(context).textTheme.bodyMedium),
+            ElevatedButton(
+              child: Text('点击创建课程组', style: Theme.of(context).textTheme.bodyMedium),
+              onPressed: () async {
+                // ignore: unused_local_variable
+                final result = await Get.toNamed('/edit-course-group');
+                // if (result == true) {
+                // print('object');
+                setState(() {});
+                // }
+              },
+            ),
+          ],
+        ),
+      );
     }
-    var focusNode = FocusNode();
     var items = coursesController.courseGroups.map<DropdownMenuItem<String>>((CourseGroup group) {
       return DropdownMenuItem<String>(
         value: group.id,
         child: Text(group.name),
       );
     }).toList();
-    items.add(DropdownMenuItem<String>(
-      value: null,
-      child: Text('🚫不关联'),
-    ));
+    // items.add(DropdownMenuItem<String>(
+    //   value: null,
+    //   child: Text('🚫不关联'),
+    // ));
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          focusNode.requestFocus();
-        },
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
-          child: Row(
-            children: [
-              Material(
-                color: Colors.blue,
-                borderRadius: BorderRadius.circular(8),
-                child: const SizedBox(
-                  height: 32,
-                  width: 32,
-                  child: Center(
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.white,
-                    ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
+        child: Row(
+          children: [
+            Material(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(8),
+              child: const SizedBox(
+                height: 32,
+                width: 32,
+                child: Center(
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.white,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                // flex: 1,
-                child: Text(
-                  '课程组',
-                  style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              // flex: 1,
+              child: Text(
+                '课程组',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            Flexible(
+              flex: 2,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 36),
+                child: DropdownButton<String>(
+                  value: widget.course.groupId,
+                  isExpanded: true,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      widget.course.groupId = newValue;
+                    });
+                  },
+                  icon: const Icon(Icons.arrow_drop_down),
+                  items: items,
                 ),
               ),
-              Flexible(
-                flex: 2,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: 36),
-                  child: DropdownButton<String>(
-                    value: widget.course.groupId,
-                    focusNode: FocusNode(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        widget.course.groupId = newValue;
-                      });
-                    },
-                    icon: const Icon(Icons.arrow_drop_down),
-                    isDense: true,
-                    items: items,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

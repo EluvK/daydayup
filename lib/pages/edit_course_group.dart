@@ -157,6 +157,16 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
             )),
         Divider(),
         informations(),
+        Divider(),
+        // dangerZone,
+        ElevatedButton(
+          // todo make it click twice to delete
+          onPressed: () {
+            coursesController.deleteCourseGroup(widget.courseGroup.id);
+            Get.back();
+          },
+          child: const Text('删除课程组', style: TextStyle(color: Colors.red)),
+        )
       ],
     );
   }

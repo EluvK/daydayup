@@ -43,6 +43,12 @@ class CoursesController extends GetxController {
     }
   }
 
+  Future<void> deleteCourseGroup(String id) async {
+    await DataBase().deleteCourseGroup(id);
+    // todo remove course group bills and courses in this group.
+    courseGroups.removeWhere((element) => element.id == id);
+  }
+
   Course getCourse(String id) {
     return courses.firstWhere((course) => course.id == id);
   }
