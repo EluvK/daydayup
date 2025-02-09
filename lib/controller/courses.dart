@@ -24,6 +24,10 @@ class CoursesController extends GetxController {
     await DataBase().upsertCourseGroupBill(bill);
   }
 
+  Future<List<CourseGroupBill>> getCourseGroupBills(String groupId) async {
+    return await DataBase().getCourseGroupBills(groupId);
+  }
+
   CourseGroup getCourseGroup(String id) {
     return courseGroups.firstWhere((courseGroup) => courseGroup.id == id);
   }

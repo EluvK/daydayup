@@ -77,23 +77,13 @@ class DataBase {
     );
   }
 
-  Future<CourseGroupBill?> getCourseGroupBill(String id) async {
+  Future<List<CourseGroupBill>> getCourseGroupBills(String groupId) async {
     final db = await getDb();
     final List<Map<String, dynamic>> maps = await db.query(
       'course_group_bill',
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'groupId = ?',
+      whereArgs: [groupId],
     );
-
-    if (maps.isNotEmpty) {
-      return CourseGroupBill.fromJson(maps.first);
-    }
-    return null;
-  }
-
-  Future<List<CourseGroupBill>> getCourseGroupBills() async {
-    final db = await getDb();
-    final List<Map<String, dynamic>> maps = await db.query('course_group_bill');
 
     return List.generate(maps.length, (i) {
       return CourseGroupBill.fromJson(maps[i]);

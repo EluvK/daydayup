@@ -91,8 +91,8 @@ class _CoursesTableState extends State<CoursesTable> {
               children: [
                 groupCourses.entries
                     .map(
-                      (e) => ExpansionTile(
-                        initiallyExpanded: true,
+                      (MapEntry<String, List<Course>> e) => ExpansionTile(
+                        initiallyExpanded: e.value.isNotEmpty,
                         childrenPadding: const EdgeInsets.only(bottom: 8),
                         title: Text(courseGroups.firstWhere((element) => element.id == e.key).name),
                         trailing: IconButton(
@@ -101,7 +101,11 @@ class _CoursesTableState extends State<CoursesTable> {
                             Get.toNamed('/edit-course-group', arguments: [e.key]);
                           },
                         ),
-                        children: e.value.map((e) => _buildCourseTile(e)).toList(),
+                        children: e.value.isEmpty
+                            ? [
+                                Text('...'),
+                              ]
+                            : e.value.map((e) => _buildCourseTile(e)).toList(),
                       ),
                     )
                     .toList(),

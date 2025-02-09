@@ -139,8 +139,6 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
                   onPressed: billAdd == 0
                       ? null
                       : () {
-                          billAdd = 0;
-                          billDescription = '';
                           var bill = CourseGroupBill(
                             id: Uuid().v4(),
                             groupId: widget.courseGroup.id,
@@ -149,6 +147,8 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
                             amount: billAdd,
                           );
                           coursesController.addCourseGroupBill(bill);
+                          billAdd = 0;
+                          billDescription = '';
                           setState(() {});
                         },
                   child: const Text('补充课时'),
@@ -162,7 +162,42 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
   }
 
   Widget informations() {
-    var courses = coursesController.courses.where((element) => element.groupId == widget.courseGroup.id).toList();
-    return Column();
+    // var courses = coursesController.courses.where((element) => element.groupId == widget.courseGroup.id).toList();
+    return Column(
+      children: [
+        _infoBills(),
+      ],
+    );
+  }
+
+  Widget _infoBills() {
+    return FutureBuilder<List<CourseGroupBill>>(
+      future: coursesController.getCourseGroupBills(widget.courseGroup.id),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+        var bills = snapshot.data!;
+        return Column(
+          children: [
+            for (var bill in bills)
+              ListTile(
+                title: Text(bill.description),
+                subtitle: Text('${bill.amount} at ${bill.time}'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    // coursesController.deleteCourseGroupBill(bill.id);
+                    setState(() {});
+                  },
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }

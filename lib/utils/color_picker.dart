@@ -52,7 +52,7 @@ class ColorPickerWidget extends StatelessWidget {
             transitionBuilder: (BuildContext context, Animation<double> a1, Animation<double> a2, Widget widget) {
               final double curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
               return Transform(
-                transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+                transform: Matrix4.translationValues(0.0, curvedValue * 100, 0.0),
                 child: Opacity(
                   opacity: a1.value,
                   child: widget,
