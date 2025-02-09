@@ -95,6 +95,12 @@ class _CoursesTableState extends State<CoursesTable> {
                         initiallyExpanded: true,
                         childrenPadding: const EdgeInsets.only(bottom: 8),
                         title: Text(courseGroups.firstWhere((element) => element.id == e.key).name),
+                        trailing: IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () {
+                            Get.toNamed('/edit-course-group', arguments: [e.key]);
+                          },
+                        ),
                         children: e.value.map((e) => _buildCourseTile(e)).toList(),
                       ),
                     )

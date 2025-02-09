@@ -116,6 +116,7 @@ enum TimeTitleEnum {
   courseFirstDayTime, // 首次日期
   courseStartTime, // 开始时间
   courseEndTime, // 结束时间
+  courseGroupBillAddTime // 课程组账单添加时间
 }
 
 extension TimeTitleEnumExtension on TimeTitleEnum {
@@ -129,6 +130,8 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return '开始时间';
       case TimeTitleEnum.courseEndTime:
         return '结束时间';
+      case TimeTitleEnum.courseGroupBillAddTime:
+        return '账单添加时间';
     }
   }
 
@@ -142,6 +145,8 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return Icons.vertical_align_top_rounded;
       case TimeTitleEnum.courseEndTime:
         return Icons.vertical_align_bottom_rounded;
+      case TimeTitleEnum.courseGroupBillAddTime:
+        return Icons.attach_money_rounded;
     }
   }
 
@@ -155,6 +160,8 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return Colors.green;
       case TimeTitleEnum.courseEndTime:
         return Colors.green;
+      case TimeTitleEnum.courseGroupBillAddTime:
+        return Colors.blue;
     }
   }
 
@@ -168,6 +175,8 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return DateTimePickerType.time;
       case TimeTitleEnum.courseEndTime:
         return DateTimePickerType.time;
+      case TimeTitleEnum.courseGroupBillAddTime:
+        return DateTimePickerType.datetime;
     }
   }
 }

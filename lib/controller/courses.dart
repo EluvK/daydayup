@@ -20,6 +20,10 @@ class CoursesController extends GetxController {
     super.onInit();
   }
 
+  Future<void> addCourseGroupBill(CourseGroupBill bill) async {
+    await DataBase().upsertCourseGroupBill(bill);
+  }
+
   CourseGroup getCourseGroup(String id) {
     return courseGroups.firstWhere((courseGroup) => courseGroup.id == id);
   }

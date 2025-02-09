@@ -51,20 +51,52 @@ class PatternConverter implements JsonConverter<Pattern, String> {
   String toJson(Pattern pattern) => jsonEncode(pattern.toJson());
 }
 
+class ListStringConverter implements JsonConverter<List<String>, String> {
+  const ListStringConverter();
+
+  @override
+  List<String> fromJson(String json) => jsonDecode(json).cast<String>();
+
+  @override
+  String toJson(List<String> list) => jsonEncode(list);
+}
+
 @JsonSerializable()
 class CourseGroup {
   final String id;
   String name;
-  double leftTimeUnit;
+  String description;
+  @ListStringConverter()
+  List<String> billIds = [];
 
   CourseGroup({
     required this.id,
     required this.name,
-    this.leftTimeUnit = 0,
+    required this.description,
   });
 
   factory CourseGroup.fromJson(Map<String, dynamic> json) => _$CourseGroupFromJson(json);
   Map<String, dynamic> toJson() => _$CourseGroupToJson(this);
+}
+
+@JsonSerializable()
+class CourseGroupBill {
+  final String id;
+  final String groupId;
+  final String description;
+  final DateTime time;
+  double amount;
+
+  CourseGroupBill({
+    required this.id,
+    required this.groupId,
+    required this.description,
+    required this.time,
+    required this.amount,
+  });
+
+  factory CourseGroupBill.fromJson(Map<String, dynamic> json) => _$CourseGroupBillFromJson(json);
+  Map<String, dynamic> toJson() => _$CourseGroupBillToJson(this);
 }
 
 @JsonSerializable()

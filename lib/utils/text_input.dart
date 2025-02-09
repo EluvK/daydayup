@@ -73,7 +73,7 @@ class TextInputWidget extends StatelessWidget {
 enum InputTitleEnum {
   courseGroupName,
   courseName,
-  courseDescription,
+  anyDescription,
   userName,
 }
 
@@ -84,8 +84,8 @@ extension InputTitleEnumExtension on InputTitleEnum {
         return '课程组名称';
       case InputTitleEnum.courseName:
         return '课程名称';
-      case InputTitleEnum.courseDescription:
-        return '课程描述';
+      case InputTitleEnum.anyDescription:
+        return '备注信息';
       case InputTitleEnum.userName:
         return '用户名';
     }
@@ -97,7 +97,7 @@ extension InputTitleEnumExtension on InputTitleEnum {
         return Icons.bookmarks_rounded;
       case InputTitleEnum.courseName:
         return Icons.class_;
-      case InputTitleEnum.courseDescription:
+      case InputTitleEnum.anyDescription:
         return Icons.description;
       case InputTitleEnum.userName:
         return Icons.person;
@@ -110,7 +110,7 @@ extension InputTitleEnumExtension on InputTitleEnum {
         return Colors.orange;
       case InputTitleEnum.courseName:
         return Colors.red;
-      case InputTitleEnum.courseDescription:
+      case InputTitleEnum.anyDescription:
         return Colors.blue;
       case InputTitleEnum.userName:
         return Colors.green;
@@ -195,7 +195,7 @@ class NumberInputWidget extends StatelessWidget {
 
 enum NumberInputEnum {
   courseLength,
-  courseGroupTimeUnit,
+  courseGroupBillAdd,
 }
 
 extension NumberInputEnumExtension on NumberInputEnum {
@@ -203,8 +203,8 @@ extension NumberInputEnumExtension on NumberInputEnum {
     switch (this) {
       case NumberInputEnum.courseLength:
         return '课程节数';
-      case NumberInputEnum.courseGroupTimeUnit:
-        return '剩余课时单位';
+      case NumberInputEnum.courseGroupBillAdd:
+        return '补充课时';
     }
   }
 
@@ -212,7 +212,7 @@ extension NumberInputEnumExtension on NumberInputEnum {
     switch (this) {
       case NumberInputEnum.courseLength:
         return Icons.repeat_rounded;
-      case NumberInputEnum.courseGroupTimeUnit:
+      case NumberInputEnum.courseGroupBillAdd:
         return Icons.more_time_rounded;
     }
   }
@@ -221,7 +221,7 @@ extension NumberInputEnumExtension on NumberInputEnum {
     switch (this) {
       case NumberInputEnum.courseLength:
         return Colors.red;
-      case NumberInputEnum.courseGroupTimeUnit:
+      case NumberInputEnum.courseGroupBillAdd:
         return Colors.red;
     }
   }

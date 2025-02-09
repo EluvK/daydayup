@@ -39,12 +39,21 @@ class DataBase {
             PRIMARY KEY (courseId, id)
           )
         ''');
-
         await db.execute('''
           CREATE TABLE course_group (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
-            leftTimeUnit REAL NOT NULL
+            description TEXT NOT NULL,
+            billIds TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE course_group_bill (
+            id TEXT PRIMARY KEY,
+            groupId TEXT NOT NULL,
+            description TEXT NOT NULL,
+            time TEXT NOT NULL,
+            amount REAL NOT NULL
           )
         ''');
 
@@ -56,6 +65,39 @@ class DataBase {
     );
 
     return _db!;
+  }
+
+  // course group bill
+  Future<void> upsertCourseGroupBill(CourseGroupBill courseGroupBill) async {
+    final db = await getDb();
+    await db.insert(
+      'course_group_bill',
+      courseGroupBill.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<CourseGroupBill?> getCourseGroupBill(String id) async {
+    final db = await getDb();
+    final List<Map<String, dynamic>> maps = await db.query(
+      'course_group_bill',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return CourseGroupBill.fromJson(maps.first);
+    }
+    return null;
+  }
+
+  Future<List<CourseGroupBill>> getCourseGroupBills() async {
+    final db = await getDb();
+    final List<Map<String, dynamic>> maps = await db.query('course_group_bill');
+
+    return List.generate(maps.length, (i) {
+      return CourseGroupBill.fromJson(maps[i]);
+    });
   }
 
   // course group

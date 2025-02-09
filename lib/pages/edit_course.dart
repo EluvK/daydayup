@@ -104,7 +104,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           initialValue: widget.course.name,
         ),
         TextInputWidget(
-          title: InputTitleEnum.courseDescription,
+          title: InputTitleEnum.anyDescription,
           onChanged: (value) {
             widget.course.description = value;
           },

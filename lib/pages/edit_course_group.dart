@@ -1,6 +1,7 @@
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/text_input.dart';
+import 'package:daydayup/utils/time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
@@ -40,11 +41,12 @@ class _EditCourseGroupState extends State<EditCourseGroup> {
       var courseGroup = CourseGroup(
         id: const Uuid().v4(),
         name: '',
-        leftTimeUnit: 0,
+        description: '',
+        // leftTimeUnit: 0,
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: _EditCourseGroupInner(courseGroup: courseGroup),
+        child: _EditCourseGroupInner(courseGroup: courseGroup, newGroup: true),
       );
     }
     return Padding(
@@ -55,9 +57,10 @@ class _EditCourseGroupState extends State<EditCourseGroup> {
 }
 
 class _EditCourseGroupInner extends StatefulWidget {
-  const _EditCourseGroupInner({required this.courseGroup});
+  const _EditCourseGroupInner({required this.courseGroup, this.newGroup = false});
 
   final CourseGroup courseGroup;
+  final bool newGroup;
 
   @override
   State<_EditCourseGroupInner> createState() => __EditCourseGroupInnerState();
@@ -65,6 +68,16 @@ class _EditCourseGroupInner extends StatefulWidget {
 
 class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
   final coursesController = Get.find<CoursesController>();
+  bool shouldSaveFirst = true;
+  double billAdd = 0;
+  String billDescription = '';
+  DateTime billTime = DateTime.now();
+
+  @override
+  void initState() {
+    shouldSaveFirst = widget.newGroup;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,22 +90,79 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
           },
           initialValue: widget.courseGroup.name,
         ),
-        NumberInputWidget(
-          title: NumberInputEnum.courseGroupTimeUnit,
-          initialValue: widget.courseGroup.leftTimeUnit,
-          onChanged: (double value) {
-            widget.courseGroup.leftTimeUnit = value;
+        TextInputWidget(
+          title: InputTitleEnum.anyDescription,
+          onChanged: (value) {
+            widget.courseGroup.description = value;
           },
+          initialValue: widget.courseGroup.description,
+        ),
+        SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: () async {
+            await coursesController.upsertCourseGroup(widget.courseGroup);
+            shouldSaveFirst ? shouldSaveFirst = false : Get.back();
+            setState(() {});
+          },
+          child: Text(shouldSaveFirst ? '保存课程组信息' : '更新课程组信息'),
         ),
         Divider(),
-        ElevatedButton(
-          onPressed: () {
-            coursesController.upsertCourseGroup(widget.courseGroup);
-            Get.back();
-          },
-          child: const Text('保存课程组信息'),
-        ),
+        Visibility(
+            visible: shouldSaveFirst == false,
+            child: Column(
+              children: [
+                NumberInputWidget(
+                  title: NumberInputEnum.courseGroupBillAdd,
+                  initialValue: billAdd,
+                  onChanged: (double value) {
+                    setState(() {
+                      billAdd = value;
+                    });
+                  },
+                ),
+                TimePickerWidget(
+                  timeTitle: TimeTitleEnum.courseGroupBillAddTime,
+                  onChange: (value) {
+                    billTime = value;
+                  },
+                  initialValue: billTime,
+                ),
+                TextInputWidget(
+                  title: InputTitleEnum.anyDescription,
+                  onChanged: (value) {
+                    billDescription = value;
+                  },
+                  initialValue: billDescription,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: billAdd == 0
+                      ? null
+                      : () {
+                          billAdd = 0;
+                          billDescription = '';
+                          var bill = CourseGroupBill(
+                            id: Uuid().v4(),
+                            groupId: widget.courseGroup.id,
+                            description: billDescription,
+                            time: billTime,
+                            amount: billAdd,
+                          );
+                          coursesController.addCourseGroupBill(bill);
+                          setState(() {});
+                        },
+                  child: const Text('补充课时'),
+                ),
+              ],
+            )),
+        Divider(),
+        informations(),
       ],
     );
+  }
+
+  Widget informations() {
+    var courses = coursesController.courses.where((element) => element.groupId == widget.courseGroup.id).toList();
+    return Column();
   }
 }

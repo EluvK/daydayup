@@ -9,14 +9,34 @@ part of 'course.dart';
 CourseGroup _$CourseGroupFromJson(Map<String, dynamic> json) => CourseGroup(
       id: json['id'] as String,
       name: json['name'] as String,
-      leftTimeUnit: (json['leftTimeUnit'] as num?)?.toDouble() ?? 0,
-    );
+      description: json['description'] as String,
+    )..billIds =
+        const ListStringConverter().fromJson(json['billIds'] as String);
 
 Map<String, dynamic> _$CourseGroupToJson(CourseGroup instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
-      'leftTimeUnit': instance.leftTimeUnit,
+      'description': instance.description,
+      'billIds': const ListStringConverter().toJson(instance.billIds),
+    };
+
+CourseGroupBill _$CourseGroupBillFromJson(Map<String, dynamic> json) =>
+    CourseGroupBill(
+      id: json['id'] as String,
+      groupId: json['groupId'] as String,
+      description: json['description'] as String,
+      time: DateTime.parse(json['time'] as String),
+      amount: (json['amount'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$CourseGroupBillToJson(CourseGroupBill instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'groupId': instance.groupId,
+      'description': instance.description,
+      'time': instance.time.toIso8601String(),
+      'amount': instance.amount,
     };
 
 Course _$CourseFromJson(Map<String, dynamic> json) => Course(
