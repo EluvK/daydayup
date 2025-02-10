@@ -226,3 +226,33 @@ enum PatternType {
   @JsonValue(200)
   costClassTimeUnit,
 }
+
+
+extension LessonStatusExtension on LessonStatus {
+  String get name {
+    switch (this) {
+      case LessonStatus.notStarted:
+        return '未开始';
+      case LessonStatus.finished:
+        return '完成';
+      case LessonStatus.canceled:
+        return '取消';
+      case LessonStatus.notAttended:
+        return '缺课';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case LessonStatus.notStarted:
+        return Colors.grey;
+      case LessonStatus.finished:
+        return Colors.green;
+      case LessonStatus.canceled:
+        return Colors.red;
+      case LessonStatus.notAttended:
+        return Colors.red;
+    }
+  }
+  
+}

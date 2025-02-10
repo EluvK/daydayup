@@ -1,8 +1,11 @@
 import 'dart:collection';
 
+import 'package:daydayup/components/lesson.dart';
+import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -37,7 +40,7 @@ class CalendarTable extends StatefulWidget {
 
 class _CalendarTableState extends State<CalendarTable> {
   late final ValueNotifier<List<Lesson>> _selectedEvents;
-  final ValueNotifier<DateTime> _focusedDay = ValueNotifier(DateTime.now());
+  final ValueNotifier<DateTime> _focusedDay = ValueNotifier(regularDateTimeToDate(DateTime.now()));
   DateTime _selectedDay = DateTime.now();
   final Set<DateTime> _selectedDays = LinkedHashSet<DateTime>(
     equals: isSameDay,
@@ -49,6 +52,10 @@ class _CalendarTableState extends State<CalendarTable> {
   // RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
   // DateTime? _rangeStart;
   // DateTime? _rangeEnd;
+
+  final coursesController = Get.find<CoursesController>();
+  late LinkedHashMap<DateTime, List<Lesson>> dayLessonForEvent =
+      LinkedHashMap(equals: isSameDate, hashCode: getHashCode)..addAll(coursesController.eachDateLessons);
 
   @override
   void initState() {
@@ -70,7 +77,13 @@ class _CalendarTableState extends State<CalendarTable> {
 
   List<Lesson> _getEventsForDay(DateTime day) {
     // return kEvents[day] ?? [];
-    return [];
+    print('focusedDay: $day');
+    return dayLessonForEvent[day] ?? [];
+    // var result = coursesController.eachDateLessons[day] ?? [];
+    // if (result.isNotEmpty) {
+    //   print('result: $result');
+    // }
+    // return result;
   }
 
   // List<Lesson> _getEventsForDays(Iterable<DateTime> days) {
@@ -141,6 +154,21 @@ class _CalendarTableState extends State<CalendarTable> {
             CalendarFormat.month: 'Month',
             CalendarFormat.twoWeeks: '2 weeks',
           },
+          calendarBuilders: CalendarBuilders<Lesson>(
+            // change the dot style under calendar day
+            singleMarkerBuilder: (context, day, event) {
+              return Container(
+                height: 6.0,
+                width: 6.0,
+                margin: const EdgeInsets.all(0.5),
+                decoration: BoxDecoration(
+                  // provide your own condition here
+                  color: coursesController.courses.firstWhere((element) => element.id == event.courseId).color,
+                  shape: BoxShape.circle,
+                ),
+              );
+            },
+          ),
           // selectedDayPredicate: (day) => _selectedDays.contains(day),
           selectedDayPredicate: (day) => _selectedDay == day,
           // rangeStartDay: _rangeStart,
@@ -164,6 +192,18 @@ class _CalendarTableState extends State<CalendarTable> {
           },
         ),
         const SizedBox(height: 8.0),
+        Divider(),
+        // ? maybe support range selection
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Text(
+              DateFormat.MMMEd().format(_selectedDay),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+        ),
         Expanded(
           child: ValueListenableBuilder<List<Lesson>>(
             valueListenable: _selectedEvents,
@@ -171,20 +211,9 @@ class _CalendarTableState extends State<CalendarTable> {
               return ListView.builder(
                 itemCount: value.length,
                 itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                      vertical: 4.0,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(),
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    child: ListTile(
-                      onTap: () => print('${value[index]}'),
-                      title: Text('${value[index]}'),
-                    ),
-                  );
+                  var lesson = value[index];
+                  var course = coursesController.courses.firstWhere((element) => element.id == lesson.courseId);
+                  return LessonTile(course: course, lesson: lesson);
                 },
               );
             },
@@ -222,12 +251,9 @@ class _CalendarHeader extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 16.0),
-          SizedBox(
-            width: 120.0,
-            child: Text(
-              headerText,
-              style: const TextStyle(fontSize: 26.0),
-            ),
+          Text(
+            headerText,
+            style: const TextStyle(fontSize: 26.0),
           ),
           IconButton(
             icon: const Icon(Icons.calendar_today, size: 20.0),

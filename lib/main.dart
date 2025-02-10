@@ -12,6 +12,8 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
@@ -31,7 +33,11 @@ void main() async {
     return controller;
   });
 
-  runApp(const MyApp());
+  final coursesController = Get.find<CoursesController>();
+  await coursesController.ensureInitialization();
+
+  Intl.defaultLocale = 'zh_CN';
+  initializeDateFormatting().then((_) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {

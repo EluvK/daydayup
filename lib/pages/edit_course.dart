@@ -233,6 +233,16 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         // todo view course status
 
         // todo view lesson list
+        Divider(),
+        // dangerZone,
+        ElevatedButton(
+          // todo make it click twice to delete
+          onPressed: () {
+            coursesController.deleteCourse(widget.course.id);
+            Get.back();
+          },
+          child: const Text('删除课程', style: TextStyle(color: Colors.red)),
+        ),
       ],
     );
   }
@@ -388,7 +398,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course course) {
   var resultLessons = <Lesson>[];
   var nowTime = DateTime.now();
-  var takedCount = 0;
+  var completedCount = 0;
 
   currentLessons.sort((a, b) => a.startTime.compareTo(b.startTime));
   for (var lesson in currentLessons) {
@@ -397,26 +407,29 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
       resultLessons.add(lesson);
     }
     if (lesson.status != LessonStatus.notStarted || lesson.status != LessonStatus.canceled) {
-      takedCount++;
+      completedCount++;
     }
   }
-  var futureCount = course.pattern.value.toInt() - takedCount;
+  var futureCount = course.pattern.value.toInt() - completedCount;
 
   int generateCount = 0;
   DateTime courseDate = currentLessons.isEmpty ? course.timeTable.startDate : currentLessons.last.endTime;
   while (generateCount < futureCount) {
     if (course.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))) {
-      var startTime = courseDate.copyWith(
-          hour: course.timeTable.lessonStartTime.hour, minute: course.timeTable.lessonStartTime.minute);
+      var startTime = courseDate
+          .copyWith(hour: course.timeTable.lessonStartTime.hour, minute: course.timeTable.lessonStartTime.minute)
+          .toUtc();
+      var endTime = courseDate
+          .copyWith(hour: course.timeTable.lessonStartTime.hour, minute: course.timeTable.lessonStartTime.minute)
+          .add(course.timeTable.duration)
+          .toUtc();
       resultLessons.add(Lesson(
         id: currentLessons.firstWhereOrNull((element) => element.startTime == startTime)?.id ?? const Uuid().v4(),
         name: "${course.name} @ ${resultLessons.length + 1}",
         user: course.user,
         courseId: course.id,
         startTime: startTime,
-        endTime: courseDate
-            .copyWith(hour: course.timeTable.lessonStartTime.hour, minute: course.timeTable.lessonStartTime.minute)
-            .add(course.timeTable.duration),
+        endTime: endTime,
         status: LessonStatus.notStarted,
       ));
       generateCount++;

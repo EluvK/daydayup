@@ -315,12 +315,30 @@ class DataBase {
     });
   }
 
+  Future<List<Lesson>> getAllLessons() async {
+    final db = await getDb();
+    final List<Map<String, dynamic>> maps = await db.query('lessons');
+
+    return List.generate(maps.length, (i) {
+      return Lesson.fromJson(maps[i]);
+    });
+  }
+
   Future<void> deleteLesson(String courseId, String id) async {
     final db = await getDb();
     await db.delete(
       'lessons',
       where: 'courseId = ? AND id = ?',
       whereArgs: [courseId, id],
+    );
+  }
+
+  Future<void> deleteLessons(String courseId) async {
+    final db = await getDb();
+    await db.delete(
+      'lessons',
+      where: 'courseId = ?',
+      whereArgs: [courseId],
     );
   }
 }

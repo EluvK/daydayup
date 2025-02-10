@@ -1,5 +1,6 @@
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/model/db.dart';
+import 'package:daydayup/utils/utils.dart';
 import 'package:get/get.dart';
 
 class CoursesController extends GetxController {
@@ -7,19 +8,48 @@ class CoursesController extends GetxController {
   final RxList<Course> courses = <Course>[].obs;
   final RxMap<String, List<Lesson>> courseLessons = <String, List<Lesson>>{}.obs;
   final RxMap<String, CourseStatus> courseStatus = <String, CourseStatus>{}.obs;
+  final RxMap<DateTime, List<Lesson>> eachDateLessons = <DateTime, List<Lesson>>{}.obs;
 
   @override
-  void onInit() async {
+  Future<void> onInit() async {
     courseGroups.value = await DataBase().getCourseGroups();
     courses.value = await DataBase().getCourses();
     for (final course in courses) {
       courseLessons[course.id] = await DataBase().getLessons(course.id);
       courseStatus[course.id] = CourseStatus.fromCourses(course, courseLessons[course.id]!);
     }
+    await rebuildEachDateLessons();
 
     super.onInit();
+    _initialized = true;
   }
 
+  bool _initialized = false;
+  Future<void> ensureInitialization() async {
+    while (!_initialized) {
+      await onInit();
+    }
+    return;
+  }
+
+  Future<void> rebuildEachDateLessons() async {
+    eachDateLessons.clear();
+    var allLessons = await DataBase().getAllLessons();
+    for (final lesson in allLessons) {
+      var date = regularDateTimeToDate(lesson.startTime);
+      print('regularDateTimeToDate: $date');
+      if (eachDateLessons[date] == null) {
+        print('new date: $date');
+        eachDateLessons[date] = <Lesson>[];
+      }
+      if (eachDateLessons[date]!.indexWhere((element) => element.id == lesson.id) == -1) {
+        eachDateLessons[date]!.add(lesson);
+      }
+      print('add lesson, current length: ${eachDateLessons[date]!.length}');
+    }
+  }
+
+  // --- course group bill
   Future<void> addCourseGroupBill(CourseGroupBill bill) async {
     await DataBase().upsertCourseGroupBill(bill);
   }
@@ -28,6 +58,7 @@ class CoursesController extends GetxController {
     return await DataBase().getCourseGroupBills(groupId);
   }
 
+  // --- course group
   CourseGroup getCourseGroup(String id) {
     return courseGroups.firstWhere((courseGroup) => courseGroup.id == id);
   }
@@ -49,6 +80,7 @@ class CoursesController extends GetxController {
     courseGroups.removeWhere((element) => element.id == id);
   }
 
+  // --- course
   Course getCourse(String id) {
     return courses.firstWhere((course) => course.id == id);
   }
@@ -65,6 +97,16 @@ class CoursesController extends GetxController {
     }
     courseLessons[course.id] = lessons;
     courseStatus[course.id] = CourseStatus.fromCourses(course, lessons);
+    await rebuildEachDateLessons();
+  }
+
+  Future<void> deleteCourse(String id) async {
+    await DataBase().deleteCourse(id);
+    await DataBase().deleteLessons(id);
+    courseLessons.remove(id);
+    courseStatus.remove(id);
+    courses.removeWhere((element) => element.id == id);
+    await rebuildEachDateLessons();
   }
 
   // lesson

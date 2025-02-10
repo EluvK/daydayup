@@ -87,44 +87,59 @@ class _UserPickerState extends State<UserPicker> {
                               widget.onChanged(selectedUserIds);
                             });
                           },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            // width: 120,
-                            // height: 50,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color:
-                                    selectedUserIds.contains(user.id) ? user.color.withAlpha(200) : Colors.transparent,
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                if (selectedUserIds.contains(user.id))
-                                  BoxShadow(
-                                    color: user.color.withAlpha(120),
-                                    spreadRadius: 2,
-                                    blurRadius: 1,
-                                  ),
-                              ],
-                              color: user.color.withAlpha(100),
-                              borderRadius: BorderRadius.circular(8), // 调整圆角大小
-                            ),
-                            child: Center(
-                              child: Text(
-                                user.name,
-                                style: TextStyle(
-                                  fontWeight: selectedUserIds.contains(user.id) ? FontWeight.bold : FontWeight.normal,
-                                ),
-                              ),
-                            ),
-                          ),
+                          child: UserAvatar(user: user, isSelected: selectedUserIds.contains(user.id)),
                         ),
                     ],
                   ),
                 )),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class UserAvatar extends StatelessWidget {
+  const UserAvatar({
+    super.key,
+    required this.user,
+    required this.isSelected,
+  });
+
+  final User user;
+  final bool isSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.only(left: 4),
+      // width: 120,
+      // height: 50,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: isSelected ? user.color.withAlpha(200) : Colors.transparent,
+          width: 1,
+        ),
+        boxShadow: [
+          if (isSelected)
+            BoxShadow(
+              color: user.color.withAlpha(120),
+              spreadRadius: 2,
+              blurRadius: 1,
+            ),
+        ],
+        color: user.color.withAlpha(100),
+        borderRadius: BorderRadius.circular(8), // 调整圆角大小
+      ),
+      child: Center(
+        child: Text(
+          user.name,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ),
     );
