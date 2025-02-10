@@ -1,4 +1,5 @@
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/text_input.dart';
 import 'package:flutter/material.dart';
 
 class UserPicker extends StatefulWidget {
@@ -22,6 +23,8 @@ class UserPicker extends StatefulWidget {
 class _UserPickerState extends State<UserPicker> {
   List<String> selectedUserIds = [];
 
+  final userTitle = InputTitleEnum.userName;
+
   @override
   void initState() {
     selectedUserIds = widget.initialUser.map((e) => e.id).toList();
@@ -38,14 +41,14 @@ class _UserPickerState extends State<UserPicker> {
         child: Row(
           children: [
             Material(
-              color: Colors.blue,
+              color: userTitle.color,
               borderRadius: BorderRadius.circular(8),
-              child: const SizedBox(
+              child: SizedBox(
                 height: 32,
                 width: 32,
                 child: Center(
                   child: Icon(
-                    Icons.person,
+                    userTitle.icon,
                     color: Colors.white,
                   ),
                 ),
@@ -55,7 +58,7 @@ class _UserPickerState extends State<UserPicker> {
             Expanded(
               // flex: 1,
               child: Text(
-                '用户',
+                userTitle.title,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),

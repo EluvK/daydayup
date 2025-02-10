@@ -15,7 +15,7 @@ class EditCourseGroupPage extends StatelessWidget {
     final String? courseGroupId = args?[0];
     return Scaffold(
       appBar: AppBar(
-        title: Text(courseGroupId == null ? 'New Course Group' : 'Edit Course Group'),
+        title: Text(courseGroupId == null ? '创建课程组' : '修改课程组'),
       ),
       body: EditCourseGroup(courseGroupId: courseGroupId),
     );

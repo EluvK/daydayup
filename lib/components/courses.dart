@@ -141,11 +141,17 @@ class _CoursesTableState extends State<CoursesTable> {
         ),
         child: ListTile(
           title: Text(course.name),
+          trailing: IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () async {
+              await Get.toNamed('/edit-course', arguments: [course.id]);
+              setState(() {});
+            },
+          ),
           subtitle: Text("${course.timeTable.startDate.toString()} (${course.description})"),
           textColor: course.color,
-          onTap: () async {
-            await Get.toNamed('/edit-course', arguments: [course.id]);
-            setState(() {});
+          onTap: () {
+            Get.toNamed('/view-course', arguments: [course.id]);
           },
         ),
       ),

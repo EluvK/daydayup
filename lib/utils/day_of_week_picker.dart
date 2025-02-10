@@ -1,3 +1,4 @@
+import 'package:daydayup/utils/time_picker.dart';
 import 'package:flutter/material.dart';
 
 class DayOfWeekPickerWidget extends StatefulWidget {
@@ -13,14 +14,12 @@ class DayOfWeekPickerWidget extends StatefulWidget {
 class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
   List<String> selectedDays = [];
 
+  final TimeTitleEnum title = TimeTitleEnum.dayOfWeek;
+
   @override
   void initState() {
     selectedDays = widget.initialSelectedDays;
     super.initState();
-  }
-
-  String concatSelectedDays() {
-    return '每${selectedDays.isEmpty ? ' .. ' : selectedDays.join('、')}上课';
   }
 
   @override
@@ -34,14 +33,14 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
             Row(
               children: [
                 Material(
-                  color: Colors.blue,
+                  color: title.color,
                   borderRadius: BorderRadius.circular(8),
-                  child: const SizedBox(
+                  child: SizedBox(
                     height: 32,
                     width: 32,
                     child: Center(
                       child: Icon(
-                        Icons.calendar_today,
+                        title.icon,
                         color: Colors.white,
                       ),
                     ),
@@ -51,7 +50,7 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
                 Expanded(
                   // flex: 1,
                   child: Text(
-                    concatSelectedDays(),
+                    "每${concatSelectedDays(selectedDays)}上课",
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
@@ -109,4 +108,8 @@ List<String> daysOfWeek = [
 
 String getDayOfWeek(DateTime date) {
   return daysOfWeek[date.weekday - 1];
+}
+
+String concatSelectedDays(List<String> selectedDays) {
+  return selectedDays.isEmpty ? ' .. ' : selectedDays.join('、');
 }

@@ -115,7 +115,9 @@ enum TimeTitleEnum {
   lessonDateTime, // 课程时间（日期+时间）
   courseFirstDayTime, // 首次日期
   courseStartTime, // 开始时间
+  courseDuration, // 课程时长
   courseEndTime, // 结束时间
+  dayOfWeek, // 星期几
   courseGroupBillAddTime // 课程组账单添加时间
 }
 
@@ -128,8 +130,12 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return '首次日期';
       case TimeTitleEnum.courseStartTime:
         return '开始时间';
+      case TimeTitleEnum.courseDuration:
+        return '课程时长';
       case TimeTitleEnum.courseEndTime:
         return '结束时间';
+      case TimeTitleEnum.dayOfWeek:
+        return '上课时间';
       case TimeTitleEnum.courseGroupBillAddTime:
         return '账单添加时间';
     }
@@ -143,8 +149,12 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return Icons.calendar_month;
       case TimeTitleEnum.courseStartTime:
         return Icons.vertical_align_top_rounded;
+      case TimeTitleEnum.courseDuration:
+        return Icons.schedule_rounded;
       case TimeTitleEnum.courseEndTime:
         return Icons.vertical_align_bottom_rounded;
+      case TimeTitleEnum.dayOfWeek:
+        return Icons.calendar_today;
       case TimeTitleEnum.courseGroupBillAddTime:
         return Icons.attach_money_rounded;
     }
@@ -158,8 +168,12 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return Colors.pink;
       case TimeTitleEnum.courseStartTime:
         return Colors.green;
+      case TimeTitleEnum.courseDuration:
+        return Colors.pink;
       case TimeTitleEnum.courseEndTime:
         return Colors.green;
+      case TimeTitleEnum.dayOfWeek:
+        return Colors.blue;
       case TimeTitleEnum.courseGroupBillAddTime:
         return Colors.blue;
     }
@@ -173,8 +187,13 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return DateTimePickerType.date;
       case TimeTitleEnum.courseStartTime:
         return DateTimePickerType.time;
+      case TimeTitleEnum.courseDuration:
+        // return DateTimePickerType.time; // not accurate description.
+        throw Exception('DurationPickerWidget should be used for course duration');
       case TimeTitleEnum.courseEndTime:
         return DateTimePickerType.time;
+      case TimeTitleEnum.dayOfWeek:
+        throw Exception('DayOfWeekPickerWidget should be used for day of week');
       case TimeTitleEnum.courseGroupBillAddTime:
         return DateTimePickerType.datetime;
     }
@@ -211,6 +230,8 @@ class DurationPickerWidget extends StatelessWidget {
 
   final Duration initialValue;
   final void Function(Duration) onChange;
+
+  final durationTitle = TimeTitleEnum.courseDuration;
 
   late final ValueNotifier<Duration> duration = ValueNotifier(initialValue);
 
@@ -249,14 +270,14 @@ class DurationPickerWidget extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
           child: Row(children: [
             Material(
-              color: Colors.pink,
+              color: durationTitle.color,
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
                 height: 32,
                 width: 32,
                 child: Center(
                   child: Icon(
-                    Icons.schedule_rounded,
+                    durationTitle.icon,
                     color: Colors.white,
                   ),
                 ),
@@ -265,7 +286,7 @@ class DurationPickerWidget extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '课程时长',
+                durationTitle.title,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -273,7 +294,7 @@ class DurationPickerWidget extends StatelessWidget {
               valueListenable: duration,
               builder: (context, data, _) {
                 return Text(
-                  '${data.inHours}小时${data.inMinutes.remainder(60)}分钟',
+                  durationFormatter(data),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -285,4 +306,8 @@ class DurationPickerWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+String durationFormatter(Duration duration) {
+  return '${duration.inHours}小时${duration.inMinutes.remainder(60)}分钟';
 }
