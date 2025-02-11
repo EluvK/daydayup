@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
@@ -83,7 +86,12 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   final coursesController = Get.find<CoursesController>();
 
   final RxList<String> dynamicDayOfWeek = <String>[].obs;
-  final RxList<Lesson> lessons = <Lesson>[].obs;
+
+  late final List<Lesson> currentLessons = coursesController.getCourseLessons(widget.course.id);
+  final RxList<Lesson> expectedLessons = <Lesson>[].obs;
+
+  final RxBool viewCurrentFutureLessons = true.obs;
+  final RxBool viewExpectedFutureLessons = false.obs;
 
   @override
   void initState() {
@@ -92,7 +100,6 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
     } else {
       dynamicDayOfWeek.value = widget.course.timeTable.daysOfWeek;
     }
-    lessons.value = coursesController.getCourseLessons(widget.course.id);
     super.initState();
   }
 
@@ -153,6 +160,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                       widget.course.pattern.value = 10;
                     }
                     setState(() {});
+                    // tryCalculateExpectedLessons(); // todo uncomment this line
                   },
                 ),
               ],
@@ -172,6 +180,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             setState(() {
               updateDayOfWeek(date);
             });
+            tryCalculateExpectedLessons();
           },
           initialValue: widget.course.timeTable.startDate,
         ),
@@ -181,6 +190,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             widget.course.timeTable.lessonStartTime = date;
             // recalculate course end time
             setState(() {});
+            tryCalculateExpectedLessons();
           },
           initialValue: widget.course.timeTable.lessonStartTime,
         ),
@@ -191,6 +201,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             widget.course.timeTable.duration = duration;
             // recalculate course end time
             setState(() {});
+            tryCalculateExpectedLessons();
           },
         ),
         TimePickerWidget(
@@ -201,6 +212,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             widget.course.timeTable.duration = date.difference(widget.course.timeTable.lessonStartTime);
             print('course length: ${widget.course.timeTable.duration}');
             setState(() {});
+            tryCalculateExpectedLessons();
           },
           initialValue: widget.course.timeTable.lessonStartTime.add(widget.course.timeTable.duration),
         ),
@@ -210,18 +222,20 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             print('day of week: $days');
             widget.course.timeTable.daysOfWeek = days;
             // recalculate course day of week
+            tryCalculateExpectedLessons();
           },
         ),
         Divider(),
 
         // 保存
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             if (validateUserInput()) {
+              await tryCalculateExpectedLessons();
               coursesController.upsertCourse(
                 widget.course,
                 // todo, make a preview of the lessons
-                reCalculateLessonsForEachSingle(lessons, widget.course),
+                reCalculateLessonsForEachSingle(currentLessons, widget.course),
               );
               Get.back();
             }
@@ -233,6 +247,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         // todo view course status
 
         // todo view lesson list
+        viewCourseLessons(),
         Divider(),
         // dangerZone,
         ElevatedButton(
@@ -245,6 +260,17 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         ),
       ],
     );
+  }
+
+  Future<void> tryCalculateExpectedLessons() async {
+    if (validateUserInput()) {
+      expectedLessons.value = reCalculateLessonsForEachSingle(currentLessons, widget.course);
+      print('recalculated lessons: ${expectedLessons.length}');
+      setState(() {
+        viewExpectedFutureLessons.value = true;
+        viewCurrentFutureLessons.value = false;
+      });
+    }
   }
 
   void updateDayOfWeek(DateTime date) {
@@ -393,6 +419,48 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
       ),
     );
   }
+
+  Widget viewCourseLessons() {
+    var notStartedLessons = currentLessons.where((element) => element.status == LessonStatus.notStarted).toList();
+    var maxShow = 5;
+
+    var currentFutureLessonWidgets = [
+      Align(
+        alignment: Alignment.topLeft,
+        child: Text(
+          '当前计划中，未开始的课程 (${notStartedLessons.length})',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ),
+      for (var i = 0; i < min(maxShow, notStartedLessons.length); i++)
+        LessonTile(course: widget.course, lesson: notStartedLessons[i], showDate: true, showUser: false),
+      if (notStartedLessons.length > maxShow) ...[
+        Align(alignment: Alignment.center, child: Text('.. ${notStartedLessons.length - maxShow} more')),
+      ],
+    ];
+
+    var expectedFutureLessonWidgets = [
+      Align(
+        alignment: Alignment.topLeft,
+        child: Text(
+          '修改后未来的课程 (${expectedLessons.length})',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.red[300]),
+        ),
+      ),
+      for (var i = 0; i < min(maxShow, expectedLessons.length); i++)
+        LessonTile(course: widget.course, lesson: expectedLessons[i], showDate: true, showUser: false),
+      if (expectedLessons.length > maxShow) ...[
+        Align(alignment: Alignment.center, child: Text('.. ${expectedLessons.length - maxShow} more')),
+      ],
+    ];
+
+    return Column(
+      children: [
+        if (viewCurrentFutureLessons.value) ...currentFutureLessonWidgets,
+        if (viewExpectedFutureLessons.value) ...expectedFutureLessonWidgets,
+      ],
+    );
+  }
 }
 
 List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course course) {
@@ -406,14 +474,14 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
     if (lesson.status != LessonStatus.notStarted && lesson.endTime.isBefore(nowTime)) {
       resultLessons.add(lesson);
     }
-    if (lesson.status != LessonStatus.notStarted || lesson.status != LessonStatus.canceled) {
+    if (lesson.status != LessonStatus.notStarted && lesson.status != LessonStatus.canceled) {
       completedCount++;
     }
   }
   var futureCount = course.pattern.value.toInt() - completedCount;
 
   int generateCount = 0;
-  DateTime courseDate = currentLessons.isEmpty ? course.timeTable.startDate : currentLessons.last.endTime;
+  DateTime courseDate = resultLessons.isEmpty ? course.timeTable.startDate : resultLessons.last.endTime;
   while (generateCount < futureCount) {
     if (course.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))) {
       var startTime = courseDate

@@ -20,9 +20,10 @@ class LessonTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var time =
-        "${DateFormat.Hm().format(lesson.startTime.toLocal())} - ${DateFormat.Hm().format(lesson.endTime.toLocal())}";
+        "${DateFormat.Hm().format(lesson.startTime.toLocal())}-${DateFormat.Hm().format(lesson.endTime.toLocal())}";
     if (showDate) {
-      time = "${DateFormat.yMd().format(lesson.startTime.toLocal())} $time";
+      time =
+          "${DateFormat.yMd().format(lesson.startTime.toLocal())},${DateFormat.E().format(lesson.startTime.toLocal())},$time";
     }
 
     return Container(

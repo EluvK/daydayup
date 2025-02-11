@@ -310,9 +310,9 @@ class DataBase {
       whereArgs: [courseId],
     );
 
-    return List.generate(maps.length, (i) {
-      return Lesson.fromJson(maps[i]);
-    });
+    var result = List.generate(maps.length, (i) => Lesson.fromJson(maps[i]));
+    result.sort((a, b) => a.startTime.compareTo(b.startTime));
+    return result;
   }
 
   Future<List<Lesson>> getAllLessons() async {
