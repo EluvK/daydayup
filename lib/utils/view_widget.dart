@@ -85,10 +85,10 @@ abstract class TitleClass {
   String get title;
 }
 
-class InputTitleEnumWraper implements TitleClass {
+class InputTitleEnumWrapper implements TitleClass {
   final InputTitleEnum value;
 
-  InputTitleEnumWraper(this.value);
+  InputTitleEnumWrapper(this.value);
 
   @override
   Color get color => value.color;
@@ -98,10 +98,10 @@ class InputTitleEnumWraper implements TitleClass {
   String get title => value.title;
 }
 
-class NumberInputEnumWraper implements TitleClass {
+class NumberInputEnumWrapper implements TitleClass {
   final NumberInputEnum value;
 
-  NumberInputEnumWraper(this.value);
+  NumberInputEnumWrapper(this.value);
 
   @override
   Color get color => value.color;
@@ -111,10 +111,10 @@ class NumberInputEnumWraper implements TitleClass {
   String get title => value.title;
 }
 
-class TimeTitleEnumWraper implements TitleClass {
+class TimeTitleEnumWrapper implements TitleClass {
   final TimeTitleEnum value;
 
-  TimeTitleEnumWraper(this.value);
+  TimeTitleEnumWrapper(this.value);
 
   @override
   Color get color => value.color;

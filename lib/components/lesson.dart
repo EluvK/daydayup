@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/user_picker.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +84,65 @@ class LessonTile extends StatelessWidget {
         lesson.status.name,
         style: const TextStyle(color: Colors.white),
       ),
+    );
+  }
+}
+
+class DynamicLessonList extends StatefulWidget {
+  const DynamicLessonList({
+    super.key,
+    required this.title,
+    required this.course,
+    required this.lessons,
+    this.titleColor,
+  });
+
+  final String title;
+  final Course course;
+  final List<Lesson> lessons;
+  final Color? titleColor;
+
+  @override
+  State<DynamicLessonList> createState() => _DynamicLessonListState();
+}
+
+class _DynamicLessonListState extends State<DynamicLessonList> {
+  int _maxShow = 5;
+
+  void _loadMore() {
+    setState(() {
+      _maxShow += 5;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.topLeft,
+          child: Text(
+            '${widget.title} (${widget.lessons.length})',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: widget.titleColor,
+                ),
+          ),
+        ),
+        for (var i = 0; i < min(_maxShow, widget.lessons.length); i++)
+          LessonTile(
+            course: widget.course,
+            lesson: widget.lessons[i],
+            showDate: true,
+            showUser: false,
+          ),
+        if (widget.lessons.length > _maxShow) ...[
+          TextButton(
+            onPressed: _loadMore,
+            child: Text('显示更多课程 ...${widget.lessons.length - _maxShow} '),
+          ),
+        ],
+      ],
     );
   }
 }

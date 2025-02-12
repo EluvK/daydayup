@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
@@ -88,6 +86,9 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   final RxList<String> dynamicDayOfWeek = <String>[].obs;
 
   late final List<Lesson> currentLessons = coursesController.getCourseLessons(widget.course.id);
+  late final List<Lesson> notStartedLessons =
+      currentLessons.where((element) => element.status == LessonStatus.notStarted).toList();
+
   final RxList<Lesson> expectedLessons = <Lesson>[].obs;
 
   final RxBool viewCurrentFutureLessons = true.obs;
@@ -246,9 +247,22 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
         // todo view course status
 
-        // todo view lesson list
-        viewCourseLessons(),
+        // 课程安排预览
+        if (viewCurrentFutureLessons.value)
+          DynamicLessonList(
+            title: "当前计划中，未开始的课程 (${notStartedLessons.length})",
+            course: widget.course,
+            lessons: notStartedLessons,
+          ),
+        if (viewExpectedFutureLessons.value)
+          DynamicLessonList(
+            title: "修改后未来的课程 (${expectedLessons.length})",
+            course: widget.course,
+            lessons: expectedLessons,
+            titleColor: Colors.red[300],
+          ),
         Divider(),
+
         // dangerZone,
         ElevatedButton(
           // todo make it click twice to delete
@@ -417,48 +431,6 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget viewCourseLessons() {
-    var notStartedLessons = currentLessons.where((element) => element.status == LessonStatus.notStarted).toList();
-    var maxShow = 5;
-
-    var currentFutureLessonWidgets = [
-      Align(
-        alignment: Alignment.topLeft,
-        child: Text(
-          '当前计划中，未开始的课程 (${notStartedLessons.length})',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ),
-      for (var i = 0; i < min(maxShow, notStartedLessons.length); i++)
-        LessonTile(course: widget.course, lesson: notStartedLessons[i], showDate: true, showUser: false),
-      if (notStartedLessons.length > maxShow) ...[
-        Align(alignment: Alignment.center, child: Text('.. ${notStartedLessons.length - maxShow} more')),
-      ],
-    ];
-
-    var expectedFutureLessonWidgets = [
-      Align(
-        alignment: Alignment.topLeft,
-        child: Text(
-          '修改后未来的课程 (${expectedLessons.length})',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.red[300]),
-        ),
-      ),
-      for (var i = 0; i < min(maxShow, expectedLessons.length); i++)
-        LessonTile(course: widget.course, lesson: expectedLessons[i], showDate: true, showUser: false),
-      if (expectedLessons.length > maxShow) ...[
-        Align(alignment: Alignment.center, child: Text('.. ${expectedLessons.length - maxShow} more')),
-      ],
-    ];
-
-    return Column(
-      children: [
-        if (viewCurrentFutureLessons.value) ...currentFutureLessonWidgets,
-        if (viewExpectedFutureLessons.value) ...expectedFutureLessonWidgets,
-      ],
     );
   }
 }

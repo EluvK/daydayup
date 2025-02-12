@@ -37,15 +37,15 @@ class CoursesController extends GetxController {
     var allLessons = await DataBase().getAllLessons();
     for (final lesson in allLessons) {
       var date = regularDateTimeToDate(lesson.startTime);
-      print('regularDateTimeToDate: $date');
+      // print('regularDateTimeToDate: $date');
       if (eachDateLessons[date] == null) {
-        print('new date: $date');
+        // print('new date: $date');
         eachDateLessons[date] = <Lesson>[];
       }
       if (eachDateLessons[date]!.indexWhere((element) => element.id == lesson.id) == -1) {
         eachDateLessons[date]!.add(lesson);
       }
-      print('add lesson, current length: ${eachDateLessons[date]!.length}');
+      // print('add lesson, current length: ${eachDateLessons[date]!.length}');
     }
   }
 

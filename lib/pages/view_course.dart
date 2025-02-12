@@ -1,3 +1,4 @@
+import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/day_of_week_picker.dart';
@@ -45,7 +46,11 @@ class ViewCourse extends StatefulWidget {
 class _ViewCourseState extends State<ViewCourse> {
   final coursesController = Get.find<CoursesController>();
 
-  late final course = coursesController.getCourse(widget.courseId);
+  late final Course course = coursesController.getCourse(widget.courseId);
+  late final List<Lesson> lessons = coursesController.getCourseLessons(widget.courseId);
+  late final List<Lesson> notStartedLessons =
+      lessons.where((lesson) => lesson.status == LessonStatus.notStarted).toList();
+  late final List<Lesson> pastLessons = lessons.where((lesson) => lesson.status != LessonStatus.notStarted).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +60,10 @@ class _ViewCourseState extends State<ViewCourse> {
         children: [
           // 基本信息
           Align(alignment: Alignment.topLeft, child: Text('基本信息')),
-          TextViewWidget(title: InputTitleEnumWraper(InputTitleEnum.courseName), value: course.name),
-          TextViewWidget(title: InputTitleEnumWraper(InputTitleEnum.anyDescription), value: course.description),
+          TextViewWidget(title: InputTitleEnumWrapper(InputTitleEnum.courseName), value: course.name),
+          TextViewWidget(title: InputTitleEnumWrapper(InputTitleEnum.anyDescription), value: course.description),
           ViewWidget(
-            title: InputTitleEnumWraper(InputTitleEnum.userName),
+            title: InputTitleEnumWrapper(InputTitleEnum.userName),
             value: Row(
               children: [
                 // Spacer(),
@@ -67,50 +72,59 @@ class _ViewCourseState extends State<ViewCourse> {
             ),
           ),
           Divider(),
+
           // 计费方式
           Align(alignment: Alignment.topLeft, child: Text('计费方式')),
           if (course.pattern.type == PatternType.costClassTimeUnit && course.groupId != null)
             TextViewWidget(
-              title: InputTitleEnumWraper(InputTitleEnum.courseGroupName),
+              title: InputTitleEnumWrapper(InputTitleEnum.courseGroupName),
               value: coursesController.getCourseGroup(course.groupId!).name,
             ),
           if (course.pattern.type == PatternType.costClassTimeUnit)
             TextViewWidget(
-              title: NumberInputEnumWraper(NumberInputEnum.courseCostClassTimeUnit),
+              title: NumberInputEnumWrapper(NumberInputEnum.courseCostClassTimeUnit),
               value: course.pattern.value.toString(),
             ),
           if (course.pattern.type == PatternType.eachSingleLesson)
             TextViewWidget(
-              title: NumberInputEnumWraper(NumberInputEnum.courseLength),
+              title: NumberInputEnumWrapper(NumberInputEnum.courseLength),
               value: course.pattern.value.toString(),
             ),
-
           Divider(),
+
           // 时间周期
           Align(alignment: Alignment.topLeft, child: Text('时间周期')),
           TimeViewWidget(
-            title: TimeTitleEnumWraper(TimeTitleEnum.courseFirstDayTime),
+            title: TimeTitleEnumWrapper(TimeTitleEnum.courseFirstDayTime),
             value: course.timeTable.startDate,
             formatter: DateFormat.yMd(),
           ),
           TimeViewWidget(
-            title: TimeTitleEnumWraper(TimeTitleEnum.courseStartTime),
+            title: TimeTitleEnumWrapper(TimeTitleEnum.courseStartTime),
             value: course.timeTable.lessonStartTime,
             formatter: DateFormat.Hm(),
           ),
           TextViewWidget(
-            title: TimeTitleEnumWraper(TimeTitleEnum.courseDuration),
+            title: TimeTitleEnumWrapper(TimeTitleEnum.courseDuration),
             value: durationFormatter(course.timeTable.duration),
           ),
           TimeViewWidget(
-            title: TimeTitleEnumWraper(TimeTitleEnum.courseEndTime),
+            title: TimeTitleEnumWrapper(TimeTitleEnum.courseEndTime),
             value: course.timeTable.lessonStartTime.add(course.timeTable.duration),
             formatter: DateFormat.Hm(),
           ),
           TextViewWidget(
-            title: TimeTitleEnumWraper(TimeTitleEnum.dayOfWeek),
+            title: TimeTitleEnumWrapper(TimeTitleEnum.dayOfWeek),
             value: concatSelectedDays(course.timeTable.daysOfWeek),
           ),
+          Divider(),
+
+          // 课程安排
+          // Align(alignment: Alignment.topLeft, child: Text('课程列表')),
+          DynamicLessonList(title: '未开始课程', course: course, lessons: notStartedLessons),
+          Divider(),
+          DynamicLessonList(title: '历史课程', course: course, lessons: pastLessons),
+          Divider(),
         ],
       ),
     );
