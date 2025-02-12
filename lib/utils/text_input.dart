@@ -73,6 +73,8 @@ class TextInputWidget extends StatelessWidget {
 enum InputTitleEnum {
   courseGroupName,
   courseName,
+  lessonName,
+  lessonStatus,
   anyDescription,
   userName,
 }
@@ -84,6 +86,10 @@ extension InputTitleEnumExtension on InputTitleEnum {
         return '课程组名称';
       case InputTitleEnum.courseName:
         return '课程名称';
+      case InputTitleEnum.lessonName:
+        return '课堂单元';
+      case InputTitleEnum.lessonStatus:
+        return '课堂状态';
       case InputTitleEnum.anyDescription:
         return '备注信息';
       case InputTitleEnum.userName:
@@ -97,6 +103,10 @@ extension InputTitleEnumExtension on InputTitleEnum {
         return Icons.bookmarks_rounded;
       case InputTitleEnum.courseName:
         return Icons.class_;
+      case InputTitleEnum.lessonName:
+        return Icons.play_lesson;
+      case InputTitleEnum.lessonStatus:
+        return Icons.star_rounded;
       case InputTitleEnum.anyDescription:
         return Icons.description;
       case InputTitleEnum.userName:
@@ -110,6 +120,10 @@ extension InputTitleEnumExtension on InputTitleEnum {
         return Colors.orange;
       case InputTitleEnum.courseName:
         return Colors.red;
+      case InputTitleEnum.lessonName:
+        return Colors.blue;
+      case InputTitleEnum.lessonStatus:
+        return Colors.yellow;
       case InputTitleEnum.anyDescription:
         return Colors.blue;
       case InputTitleEnum.userName:

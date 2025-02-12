@@ -233,12 +233,13 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           onPressed: () async {
             if (validateUserInput()) {
               await tryCalculateExpectedLessons();
-              coursesController.upsertCourse(
+              await coursesController.upsertCourse(
                 widget.course,
                 // todo, make a preview of the lessons
                 reCalculateLessonsForEachSingle(currentLessons, widget.course),
               );
-              Get.back();
+              Get.offAllNamed('/');
+              Get.toNamed('/view-course', arguments: [widget.course.id]);
             }
           },
           child: Text('保存课程信息'),

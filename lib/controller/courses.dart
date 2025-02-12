@@ -113,6 +113,19 @@ class CoursesController extends GetxController {
   List<Lesson> getCourseLessons(String courseId) {
     return courseLessons[courseId] ?? [];
   }
+
+  Lesson getCourseLesson(String courseId, String lessonId) {
+    return courseLessons[courseId]!.firstWhere((lesson) => lesson.id == lessonId);
+  }
+
+  Future<void> updateLesson(Lesson lesson) async {
+    final index = courseLessons[lesson.courseId]!.indexWhere((element) => element.id == lesson.id);
+    courseLessons[lesson.courseId]![index] = lesson;
+    courseStatus[lesson.courseId] =
+        CourseStatus.fromCourses(getCourse(lesson.courseId), courseLessons[lesson.courseId]!);
+    await DataBase().updateLesson(lesson);
+    await rebuildEachDateLessons();
+  }
 }
 
 class CourseStatus {

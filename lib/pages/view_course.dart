@@ -30,7 +30,10 @@ class ViewCoursePage extends StatelessWidget {
           ),
         ],
       ),
-      body: ViewCourse(courseId: courseId),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ViewCourse(courseId: courseId),
+      ),
     );
   }
 }
@@ -54,79 +57,68 @@ class _ViewCourseState extends State<ViewCourse> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ListView(
-        children: [
-          // 基本信息
-          Align(alignment: Alignment.topLeft, child: Text('基本信息')),
-          TextViewWidget(title: InputTitleEnumWrapper(InputTitleEnum.courseName), value: course.name),
-          TextViewWidget(title: InputTitleEnumWrapper(InputTitleEnum.anyDescription), value: course.description),
-          ViewWidget(
-            title: InputTitleEnumWrapper(InputTitleEnum.userName),
-            value: Row(
-              children: [
-                // Spacer(),
-                Expanded(child: UserAvatar(user: course.user, isSelected: false)),
-              ],
-            ),
-          ),
-          Divider(),
+    return ListView(
+      children: [
+        // 基本信息
+        Align(alignment: Alignment.topLeft, child: Text('基本信息')),
+        TextViewWidget(title: InputTitleEnumWrapper(InputTitleEnum.courseName), value: course.name),
+        TextViewWidget(title: InputTitleEnumWrapper(InputTitleEnum.anyDescription), value: course.description),
+        UserViewWidget(user: course.user),
+        Divider(),
 
-          // 计费方式
-          Align(alignment: Alignment.topLeft, child: Text('计费方式')),
-          if (course.pattern.type == PatternType.costClassTimeUnit && course.groupId != null)
-            TextViewWidget(
-              title: InputTitleEnumWrapper(InputTitleEnum.courseGroupName),
-              value: coursesController.getCourseGroup(course.groupId!).name,
-            ),
-          if (course.pattern.type == PatternType.costClassTimeUnit)
-            TextViewWidget(
-              title: NumberInputEnumWrapper(NumberInputEnum.courseCostClassTimeUnit),
-              value: course.pattern.value.toString(),
-            ),
-          if (course.pattern.type == PatternType.eachSingleLesson)
-            TextViewWidget(
-              title: NumberInputEnumWrapper(NumberInputEnum.courseLength),
-              value: course.pattern.value.toString(),
-            ),
-          Divider(),
-
-          // 时间周期
-          Align(alignment: Alignment.topLeft, child: Text('时间周期')),
-          TimeViewWidget(
-            title: TimeTitleEnumWrapper(TimeTitleEnum.courseFirstDayTime),
-            value: course.timeTable.startDate,
-            formatter: DateFormat.yMd(),
-          ),
-          TimeViewWidget(
-            title: TimeTitleEnumWrapper(TimeTitleEnum.courseStartTime),
-            value: course.timeTable.lessonStartTime,
-            formatter: DateFormat.Hm(),
-          ),
+        // 计费方式
+        Align(alignment: Alignment.topLeft, child: Text('计费方式')),
+        if (course.pattern.type == PatternType.costClassTimeUnit && course.groupId != null)
           TextViewWidget(
-            title: TimeTitleEnumWrapper(TimeTitleEnum.courseDuration),
-            value: durationFormatter(course.timeTable.duration),
+            title: InputTitleEnumWrapper(InputTitleEnum.courseGroupName),
+            value: coursesController.getCourseGroup(course.groupId!).name,
           ),
-          TimeViewWidget(
-            title: TimeTitleEnumWrapper(TimeTitleEnum.courseEndTime),
-            value: course.timeTable.lessonStartTime.add(course.timeTable.duration),
-            formatter: DateFormat.Hm(),
-          ),
+        if (course.pattern.type == PatternType.costClassTimeUnit)
           TextViewWidget(
-            title: TimeTitleEnumWrapper(TimeTitleEnum.dayOfWeek),
-            value: concatSelectedDays(course.timeTable.daysOfWeek),
+            title: NumberInputEnumWrapper(NumberInputEnum.courseCostClassTimeUnit),
+            value: course.pattern.value.toString(),
           ),
-          Divider(),
+        if (course.pattern.type == PatternType.eachSingleLesson)
+          TextViewWidget(
+            title: NumberInputEnumWrapper(NumberInputEnum.courseLength),
+            value: course.pattern.value.toString(),
+          ),
+        Divider(),
 
-          // 课程安排
-          // Align(alignment: Alignment.topLeft, child: Text('课程列表')),
-          DynamicLessonList(title: '未开始课程', course: course, lessons: notStartedLessons),
-          Divider(),
-          DynamicLessonList(title: '历史课程', course: course, lessons: pastLessons),
-          Divider(),
-        ],
-      ),
+        // 时间周期
+        Align(alignment: Alignment.topLeft, child: Text('时间周期')),
+        TimeViewWidget(
+          title: TimeTitleEnumWrapper(TimeTitleEnum.courseFirstDayTime),
+          value: course.timeTable.startDate,
+          formatter: DateFormat.yMd(),
+        ),
+        TimeViewWidget(
+          title: TimeTitleEnumWrapper(TimeTitleEnum.courseStartTime),
+          value: course.timeTable.lessonStartTime,
+          formatter: DateFormat.Hm(),
+        ),
+        TextViewWidget(
+          title: TimeTitleEnumWrapper(TimeTitleEnum.courseDuration),
+          value: durationFormatter(course.timeTable.duration),
+        ),
+        TimeViewWidget(
+          title: TimeTitleEnumWrapper(TimeTitleEnum.courseEndTime),
+          value: course.timeTable.lessonStartTime.add(course.timeTable.duration),
+          formatter: DateFormat.Hm(),
+        ),
+        TextViewWidget(
+          title: TimeTitleEnumWrapper(TimeTitleEnum.dayOfWeek),
+          value: concatSelectedDays(course.timeTable.daysOfWeek),
+        ),
+        Divider(),
+
+        // 课程安排
+        // Align(alignment: Alignment.topLeft, child: Text('课程列表')),
+        DynamicLessonList(title: '未开始课程', course: course, lessons: notStartedLessons),
+        Divider(),
+        DynamicLessonList(title: '历史课程', course: course, lessons: pastLessons),
+        Divider(),
+      ],
     );
   }
 }

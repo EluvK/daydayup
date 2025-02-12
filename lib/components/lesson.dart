@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/user_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class LessonTile extends StatelessWidget {
@@ -40,6 +41,7 @@ class LessonTile extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
+          Get.toNamed('/view-lesson', arguments: [course.id, lesson.id]);
           print(lesson.name);
         },
         child: Row(
@@ -56,8 +58,7 @@ class LessonTile extends StatelessWidget {
                 onTap: null,
                 trailing: IconButton(
                   onPressed: () {
-                    // todo
-                    // view lesson?
+                    Get.toNamed('/edit-lesson', arguments: [course.id, lesson.id]);
                   },
                   icon: Icon(Icons.edit),
                 ),
@@ -70,22 +71,22 @@ class LessonTile extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget lessonStatusWidget(Lesson lesson) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      margin: const EdgeInsets.only(left: 4),
-      decoration: BoxDecoration(
-        color: lesson.status.color,
-        border: Border.all(width: 0.5, color: Colors.transparent),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        lesson.status.name,
-        style: const TextStyle(color: Colors.white),
-      ),
-    );
-  }
+Widget lessonStatusWidget(Lesson lesson) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 4),
+    margin: const EdgeInsets.only(left: 4),
+    decoration: BoxDecoration(
+      color: lesson.status.color,
+      border: Border.all(width: 0.5, color: Colors.transparent),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Text(
+      lesson.status.name,
+      style: const TextStyle(color: Colors.white),
+    ),
+  );
 }
 
 class DynamicLessonList extends StatefulWidget {

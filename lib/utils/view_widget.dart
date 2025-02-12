@@ -1,5 +1,7 @@
+import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
+import 'package:daydayup/utils/user_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -35,6 +37,24 @@ class TimeViewWidget extends StatelessWidget {
       value: Text(
         formatter.format(value.toLocal()),
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+class UserViewWidget extends StatelessWidget {
+  const UserViewWidget({super.key, required this.user});
+  final User user;
+
+  @override
+  Widget build(BuildContext context) {
+    return ViewWidget(
+      title: InputTitleEnumWrapper(InputTitleEnum.userName),
+      value: Row(
+        children: [
+          // Spacer(),
+          Expanded(child: UserAvatar(user: user, isSelected: false)),
+        ],
       ),
     );
   }

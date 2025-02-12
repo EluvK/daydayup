@@ -137,7 +137,7 @@ class Course {
 class Lesson {
   final String courseId;
   final String id;
-  final String name;
+  String name;
   @UserConverter()
   User user;
   DateTime startTime;

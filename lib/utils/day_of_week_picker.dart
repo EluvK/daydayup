@@ -38,12 +38,7 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
                   child: SizedBox(
                     height: 32,
                     width: 32,
-                    child: Center(
-                      child: Icon(
-                        title.icon,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: Center(child: Icon(title.icon, color: Colors.white)),
                   ),
                 ),
                 const SizedBox(width: 12),

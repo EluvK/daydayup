@@ -112,20 +112,19 @@ class TimePickerWidget extends StatelessWidget {
 }
 
 enum TimeTitleEnum {
-  lessonDateTime, // 课程时间（日期+时间）
   courseFirstDayTime, // 首次日期
   courseStartTime, // 开始时间
   courseDuration, // 课程时长
   courseEndTime, // 结束时间
   dayOfWeek, // 星期几
-  courseGroupBillAddTime // 课程组账单添加时间
+  courseGroupBillAddTime, // 课程组账单添加时间
+  lessonStartDateTime, // 课堂开始日期时间
+  lessonEndDateTime, // 课堂结束日期时间
 }
 
 extension TimeTitleEnumExtension on TimeTitleEnum {
   String get title {
     switch (this) {
-      case TimeTitleEnum.lessonDateTime:
-        return '课程时间';
       case TimeTitleEnum.courseFirstDayTime:
         return '首次日期';
       case TimeTitleEnum.courseStartTime:
@@ -138,13 +137,15 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return '上课时间';
       case TimeTitleEnum.courseGroupBillAddTime:
         return '账单添加时间';
+      case TimeTitleEnum.lessonStartDateTime:
+        return '课堂开始时间';
+      case TimeTitleEnum.lessonEndDateTime:
+        return '课堂结束时间';
     }
   }
 
   IconData get icon {
     switch (this) {
-      case TimeTitleEnum.lessonDateTime:
-        return Icons.schedule_rounded;
       case TimeTitleEnum.courseFirstDayTime:
         return Icons.calendar_month;
       case TimeTitleEnum.courseStartTime:
@@ -157,13 +158,15 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return Icons.calendar_today;
       case TimeTitleEnum.courseGroupBillAddTime:
         return Icons.attach_money_rounded;
+      case TimeTitleEnum.lessonStartDateTime:
+        return Icons.vertical_align_top_rounded;
+      case TimeTitleEnum.lessonEndDateTime:
+        return Icons.vertical_align_bottom_rounded;
     }
   }
 
   Color get color {
     switch (this) {
-      case TimeTitleEnum.lessonDateTime:
-        return Colors.pink;
       case TimeTitleEnum.courseFirstDayTime:
         return Colors.pink;
       case TimeTitleEnum.courseStartTime:
@@ -176,13 +179,15 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
         return Colors.blue;
       case TimeTitleEnum.courseGroupBillAddTime:
         return Colors.blue;
+      case TimeTitleEnum.lessonStartDateTime:
+        return Colors.green;
+      case TimeTitleEnum.lessonEndDateTime:
+        return Colors.green;
     }
   }
 
   DateTimePickerType get pickerType {
     switch (this) {
-      case TimeTitleEnum.lessonDateTime:
-        return DateTimePickerType.datetime;
       case TimeTitleEnum.courseFirstDayTime:
         return DateTimePickerType.date;
       case TimeTitleEnum.courseStartTime:
@@ -195,6 +200,10 @@ extension TimeTitleEnumExtension on TimeTitleEnum {
       case TimeTitleEnum.dayOfWeek:
         throw Exception('DayOfWeekPickerWidget should be used for day of week');
       case TimeTitleEnum.courseGroupBillAddTime:
+        return DateTimePickerType.datetime;
+      case TimeTitleEnum.lessonStartDateTime:
+        return DateTimePickerType.datetime;
+      case TimeTitleEnum.lessonEndDateTime:
         return DateTimePickerType.datetime;
     }
   }
