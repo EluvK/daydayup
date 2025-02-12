@@ -84,12 +84,14 @@ class _CalendarTableState extends State<CalendarTable> {
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     print('_onDaySelected: $selectedDay, focusedDay: $focusedDay');
     setState(() {
-      if (_selectedDays.contains(selectedDay)) {
-        _selectedDays.remove(selectedDay);
-      } else {
-        _selectedDays.clear();
-        _selectedDays.add(selectedDay);
-      }
+      _selectedDays.clear();
+      _selectedDays.add(selectedDay);
+      // if (_selectedDays.contains(selectedDay)) {
+      //   _selectedDays.remove(selectedDay);
+      // } else {
+      //   _selectedDays.clear();
+      //   _selectedDays.add(selectedDay);
+      // }
       _focusedDay.value = focusedDay;
       _rangeStart = null;
       _rangeEnd = null;

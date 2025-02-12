@@ -32,6 +32,7 @@ class StatusPicker extends StatelessWidget {
               child: Text(title.title, style: Theme.of(context).textTheme.bodyMedium),
             ),
             SegmentedButton(
+              style: SegmentedButton.styleFrom(padding: EdgeInsets.only(left: 2, right: 2)),
               segments: [
                 for (final eachStatus in LessonStatus.values)
                   ButtonSegment<LessonStatus>(
