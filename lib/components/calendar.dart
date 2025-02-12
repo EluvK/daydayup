@@ -41,7 +41,7 @@ class CalendarTable extends StatefulWidget {
 class _CalendarTableState extends State<CalendarTable> {
   late final ValueNotifier<List<Lesson>> _selectedEvents;
   final ValueNotifier<DateTime> _focusedDay = ValueNotifier(regularDateTimeToDate(DateTime.now()));
-  DateTime _selectedDay = DateTime.now();
+  DateTime? _selectedDay = DateTime.now();
   final Set<DateTime> _selectedDays = LinkedHashSet<DateTime>(
     equals: isSameDay,
     hashCode: getHashCode,
@@ -49,9 +49,9 @@ class _CalendarTableState extends State<CalendarTable> {
 
   late PageController _pageController;
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  // RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
-  // DateTime? _rangeStart;
-  // DateTime? _rangeEnd;
+  RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
+  DateTime? _rangeStart;
+  DateTime? _rangeEnd;
 
   final coursesController = Get.find<CoursesController>();
   late LinkedHashMap<DateTime, List<Lesson>> dayLessonForEvent =
@@ -62,7 +62,6 @@ class _CalendarTableState extends State<CalendarTable> {
     super.initState();
 
     _selectedDays.add(_focusedDay.value);
-    // todo
     _selectedEvents = ValueNotifier(_getEventsForDay(_focusedDay.value));
   }
 
@@ -73,11 +72,13 @@ class _CalendarTableState extends State<CalendarTable> {
     super.dispose();
   }
 
-  // bool get canClearSelection => _selectedDays.isNotEmpty || _rangeStart != null || _rangeEnd != null;
+  bool get canClearSelection => _rangeStart != null || _rangeEnd != null;
+
+  bool get canToggleOnRange => _rangeSelectionMode != RangeSelectionMode.toggledOn;
 
   List<Lesson> _getEventsForDay(DateTime day) {
     // return kEvents[day] ?? [];
-    print('focusedDay: $day');
+    // print('focusedDay: $day');
     return dayLessonForEvent[day] ?? [];
     // var result = coursesController.eachDateLessons[day] ?? [];
     // if (result.isNotEmpty) {
@@ -86,25 +87,47 @@ class _CalendarTableState extends State<CalendarTable> {
     // return result;
   }
 
-  // List<Lesson> _getEventsForDays(Iterable<DateTime> days) {
-  //   return [
-  //     for (final d in days) ..._getEventsForDay(d),
-  //   ];
-  // }
+  List<Lesson> _getEventsForRange(DateTime start, DateTime end) {
+    final days = daysInRange(start, end);
+    return [
+      for (final d in days) ..._getEventsForDay(d),
+    ];
+  }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    print('selectedDay: $selectedDay, focusedDay: $focusedDay');
     print('current selectedDay: $_selectedDay');
+    print('_onDaySelected: $selectedDay, focusedDay: $focusedDay');
     setState(() {
       if (_selectedDay != selectedDay) {
         _selectedDay = selectedDay;
+        _focusedDay.value = focusedDay;
+        _rangeStart = null;
+        _rangeEnd = null;
+        _rangeSelectionMode = RangeSelectionMode.toggledOff;
       }
-
-      _focusedDay.value = focusedDay;
-      // _rangeSelectionMode = RangeSelectionMode.toggledOff;
     });
-    // _selectedEvents.value = _getEventsForDays(_selectedDays);
+
     _selectedEvents.value = _getEventsForDay(selectedDay);
+  }
+
+  void _onRangeSelected(DateTime? start, DateTime? end, DateTime focusedDay) {
+    print('_onRangeSelected: $start, $end, $focusedDay');
+    setState(() {
+      _selectedDay = null;
+      _focusedDay.value = focusedDay;
+      _rangeStart = start;
+      _rangeEnd = end;
+      _rangeSelectionMode = RangeSelectionMode.toggledOn;
+    });
+
+    // `start` or `end` could be null
+    if (start != null && end != null) {
+      _selectedEvents.value = _getEventsForRange(start, end);
+    } else if (start != null) {
+      _selectedEvents.value = _getEventsForDay(start);
+    } else if (end != null) {
+      _selectedEvents.value = _getEventsForDay(end);
+    }
   }
 
   @override
@@ -117,16 +140,21 @@ class _CalendarTableState extends State<CalendarTable> {
           builder: (context, value, _) {
             return _CalendarHeader(
               focusedDay: value,
-              // clearButtonVisible: canClearSelection,
               onTodayButtonTap: () {
                 setState(() => _focusedDay.value = DateTime.now());
               },
+              clearButtonVisible: canClearSelection,
               onClearButtonTap: () {
                 setState(() {
-                  // _rangeStart = null;
-                  // _rangeEnd = null;
-                  _selectedDays.clear();
-                  _selectedEvents.value = [];
+                  // reset the selected day
+                  _onDaySelected(_focusedDay.value, _focusedDay.value);
+                });
+              },
+              toggleOnRangeVisible: canToggleOnRange,
+              onToggleOnRangeTap: () {
+                setState(() {
+                  _onRangeSelected(_focusedDay.value, null, _focusedDay.value);
+                  _rangeSelectionMode = RangeSelectionMode.toggledOn;
                 });
               },
               onLeftArrowTap: () {
@@ -171,10 +199,10 @@ class _CalendarTableState extends State<CalendarTable> {
           ),
           // selectedDayPredicate: (day) => _selectedDays.contains(day),
           selectedDayPredicate: (day) => _selectedDay == day,
-          // rangeStartDay: _rangeStart,
-          // rangeEndDay: _rangeEnd,
+          rangeStartDay: _rangeStart,
+          rangeEndDay: _rangeEnd,
           calendarFormat: _calendarFormat,
-          // rangeSelectionMode: _rangeSelectionMode,
+          rangeSelectionMode: _rangeSelectionMode,
           eventLoader: _getEventsForDay,
           holidayPredicate: (day) {
             // Every 20th day of the month will be treated as a holiday
@@ -182,7 +210,7 @@ class _CalendarTableState extends State<CalendarTable> {
             return false;
           },
           onDaySelected: _onDaySelected,
-          // onRangeSelected: _onRangeSelected,
+          onRangeSelected: _onRangeSelected,
           onCalendarCreated: (controller) => _pageController = controller,
           onPageChanged: (focusedDay) => _focusedDay.value = focusedDay,
           onFormatChanged: (format) {
@@ -199,7 +227,13 @@ class _CalendarTableState extends State<CalendarTable> {
           child: Padding(
             padding: const EdgeInsets.only(left: 8.0),
             child: Text(
-              DateFormat.MMMEd().format(_selectedDay),
+              (_selectedDay != null)
+                  ? DateFormat.MMMEd().format(_selectedDay!) // selected one day
+                  : ((_rangeStart != null && _rangeEnd != null)
+                      ? '${DateFormat.MMMEd().format(_rangeStart!)} - ${DateFormat.MMMEd().format(_rangeEnd!)}' // selected full range
+                      : (_rangeStart != null || _rangeEnd != null)
+                          ? '... - ${DateFormat.MMMEd().format(_rangeStart!)} - ...' // selected one side of range
+                          : '点击日期查看日程'), // no selection
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
@@ -213,7 +247,11 @@ class _CalendarTableState extends State<CalendarTable> {
                 itemBuilder: (context, index) {
                   var lesson = value[index];
                   var course = coursesController.courses.firstWhere((element) => element.id == lesson.courseId);
-                  return LessonTile(course: course, lesson: lesson);
+                  return LessonTile(
+                    course: course,
+                    lesson: lesson,
+                    showDate: _rangeSelectionMode == RangeSelectionMode.toggledOn,
+                  );
                 },
               );
             },
@@ -231,7 +269,9 @@ class _CalendarHeader extends StatelessWidget {
   final VoidCallback onRightArrowTap;
   final VoidCallback onTodayButtonTap;
   final VoidCallback onClearButtonTap;
-  // final bool clearButtonVisible;
+  final bool clearButtonVisible;
+  final VoidCallback onToggleOnRangeTap;
+  final bool toggleOnRangeVisible;
 
   const _CalendarHeader({
     required this.focusedDay,
@@ -239,7 +279,9 @@ class _CalendarHeader extends StatelessWidget {
     required this.onRightArrowTap,
     required this.onTodayButtonTap,
     required this.onClearButtonTap,
-    // required this.clearButtonVisible,
+    required this.clearButtonVisible,
+    required this.onToggleOnRangeTap,
+    required this.toggleOnRangeVisible,
   });
 
   @override
@@ -260,12 +302,18 @@ class _CalendarHeader extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             onPressed: onTodayButtonTap,
           ),
-          // if (clearButtonVisible)
-          //   IconButton(
-          //     icon: const Icon(Icons.clear, size: 20.0),
-          //     visualDensity: VisualDensity.compact,
-          //     onPressed: onClearButtonTap,
-          //   ),
+          if (clearButtonVisible)
+            IconButton(
+              icon: const Icon(Icons.clear, size: 20.0),
+              visualDensity: VisualDensity.compact,
+              onPressed: onClearButtonTap,
+            ),
+          if (toggleOnRangeVisible)
+            IconButton(
+              icon: const Icon(Icons.compare_arrows, size: 20.0),
+              visualDensity: VisualDensity.compact,
+              onPressed: onToggleOnRangeTap,
+            ),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.chevron_left),

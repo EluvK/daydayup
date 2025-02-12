@@ -20,3 +20,11 @@ DateTime regularDateTimeToDate(DateTime dateTime) {
   // print('to: ${dateTime.toUtc().copyWith(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0)}');
   return dateTime.toUtc().copyWith(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
 }
+
+List<DateTime> daysInRange(DateTime first, DateTime last) {
+  final dayCount = last.difference(first).inDays + 1;
+  return List.generate(
+    dayCount,
+    (index) => DateTime.utc(first.year, first.month, first.day + index),
+  );
+}
