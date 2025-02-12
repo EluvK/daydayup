@@ -14,6 +14,11 @@ class SettingController extends GetxController {
   final RxList<User> users = <User>[].obs;
   final RxString defaultUserId = ''.obs;
 
+  final mainPageAtStartup = 1.obs;
+
+  // running cache
+  final currentMainPage = 0.obs;
+
   @override
   void onInit() async {
     // app settings
@@ -35,6 +40,9 @@ class SettingController extends GetxController {
     } else {
       defaultUserId.value = box.read('defaultUserId');
     }
+
+    mainPageAtStartup.value = box.read('mainPageAtStartup') ?? 1;
+    currentMainPage.value = mainPageAtStartup.value;
 
     super.onInit();
   }
@@ -66,5 +74,22 @@ class SettingController extends GetxController {
       users.add(user);
     }
     DataBase().upsertUser(user);
+  }
+
+  int getMainPageAtStartup() {
+    return mainPageAtStartup.value;
+  }
+
+  void setMainPageAtStartup(int index) {
+    mainPageAtStartup.value = index;
+    box.write('mainPageAtStartup', index);
+  }
+
+  int getCurrentMainPage() {
+    return currentMainPage.value;
+  }
+
+  void setCurrentMainPage(int index) {
+    currentMainPage.value = index;
   }
 }

@@ -9,6 +9,7 @@ import 'package:daydayup/pages/edit_course_group.dart';
 import 'package:daydayup/pages/edit_lesson.dart';
 import 'package:daydayup/pages/edit_user.dart';
 import 'package:daydayup/pages/view_course.dart';
+import 'package:daydayup/pages/view_lesson.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -57,6 +58,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/edit-course-group', page: () => EditCourseGroupPage()),
         GetPage(name: '/edit-user', page: () => EditUserPage()),
         GetPage(name: '/edit-lesson', page: () => EditLessonPage()),
+        GetPage(name: '/view-lesson', page: () => ViewLessonPage()),
       ],
       themeMode: ThemeMode.light,
       theme: FlexThemeData.light(

@@ -39,9 +39,7 @@ class CalendarTable extends StatefulWidget {
 }
 
 class _CalendarTableState extends State<CalendarTable> {
-  late final ValueNotifier<List<Lesson>> _selectedEvents;
   final ValueNotifier<DateTime> _focusedDay = ValueNotifier(regularDateTimeToDate(DateTime.now()));
-  DateTime? _selectedDay = DateTime.now();
   final Set<DateTime> _selectedDays = LinkedHashSet<DateTime>(
     equals: isSameDay,
     hashCode: getHashCode,
@@ -54,21 +52,17 @@ class _CalendarTableState extends State<CalendarTable> {
   DateTime? _rangeEnd;
 
   final coursesController = Get.find<CoursesController>();
-  late LinkedHashMap<DateTime, List<Lesson>> dayLessonForEvent =
-      LinkedHashMap(equals: isSameDate, hashCode: getHashCode)..addAll(coursesController.eachDateLessons);
 
   @override
   void initState() {
     super.initState();
 
     _selectedDays.add(_focusedDay.value);
-    _selectedEvents = ValueNotifier(_getEventsForDay(_focusedDay.value));
   }
 
   @override
   void dispose() {
     _focusedDay.dispose();
-    _selectedEvents.dispose();
     super.dispose();
   }
 
@@ -77,56 +71,49 @@ class _CalendarTableState extends State<CalendarTable> {
   bool get canToggleOnRange => _rangeSelectionMode != RangeSelectionMode.toggledOn;
 
   List<Lesson> _getEventsForDay(DateTime day) {
-    // return kEvents[day] ?? [];
-    // print('focusedDay: $day');
-    return dayLessonForEvent[day] ?? [];
-    // var result = coursesController.eachDateLessons[day] ?? [];
-    // if (result.isNotEmpty) {
-    //   print('result: $result');
-    // }
-    // return result;
+    return coursesController.eachDateLessons[day] ?? [];
   }
 
-  List<Lesson> _getEventsForRange(DateTime start, DateTime end) {
-    final days = daysInRange(start, end);
-    return [
-      for (final d in days) ..._getEventsForDay(d),
-    ];
-  }
+  // List<Lesson> _getEventsForRange(DateTime start, DateTime end) {
+  //   final days = daysInRange(start, end);
+  //   return [
+  //     for (final d in days) ..._getEventsForDay(d),
+  //   ];
+  // }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    print('current selectedDay: $_selectedDay');
     print('_onDaySelected: $selectedDay, focusedDay: $focusedDay');
     setState(() {
-      if (_selectedDay != selectedDay) {
-        _selectedDay = selectedDay;
-        _focusedDay.value = focusedDay;
-        _rangeStart = null;
-        _rangeEnd = null;
-        _rangeSelectionMode = RangeSelectionMode.toggledOff;
+      if (_selectedDays.contains(selectedDay)) {
+        _selectedDays.remove(selectedDay);
+      } else {
+        _selectedDays.clear();
+        _selectedDays.add(selectedDay);
       }
+      _focusedDay.value = focusedDay;
+      _rangeStart = null;
+      _rangeEnd = null;
+      _rangeSelectionMode = RangeSelectionMode.toggledOff;
     });
-
-    _selectedEvents.value = _getEventsForDay(selectedDay);
   }
 
   void _onRangeSelected(DateTime? start, DateTime? end, DateTime focusedDay) {
     print('_onRangeSelected: $start, $end, $focusedDay');
     setState(() {
-      _selectedDay = null;
       _focusedDay.value = focusedDay;
       _rangeStart = start;
       _rangeEnd = end;
+      _selectedDays.clear();
       _rangeSelectionMode = RangeSelectionMode.toggledOn;
     });
 
     // `start` or `end` could be null
     if (start != null && end != null) {
-      _selectedEvents.value = _getEventsForRange(start, end);
+      _selectedDays.addAll(daysInRange(start, end));
     } else if (start != null) {
-      _selectedEvents.value = _getEventsForDay(start);
+      _selectedDays.add(start);
     } else if (end != null) {
-      _selectedEvents.value = _getEventsForDay(end);
+      _selectedDays.add(end);
     }
   }
 
@@ -153,8 +140,7 @@ class _CalendarTableState extends State<CalendarTable> {
               toggleOnRangeVisible: canToggleOnRange,
               onToggleOnRangeTap: () {
                 setState(() {
-                  _onRangeSelected(_focusedDay.value, null, _focusedDay.value);
-                  _rangeSelectionMode = RangeSelectionMode.toggledOn;
+                  _onRangeSelected(_selectedDays.firstOrNull, _selectedDays.firstOrNull, _focusedDay.value);
                 });
               },
               onLeftArrowTap: () {
@@ -197,8 +183,7 @@ class _CalendarTableState extends State<CalendarTable> {
               );
             },
           ),
-          // selectedDayPredicate: (day) => _selectedDays.contains(day),
-          selectedDayPredicate: (day) => _selectedDay == day,
+          selectedDayPredicate: (day) => _selectedDays.contains(day),
           rangeStartDay: _rangeStart,
           rangeEndDay: _rangeEnd,
           calendarFormat: _calendarFormat,
@@ -227,8 +212,8 @@ class _CalendarTableState extends State<CalendarTable> {
           child: Padding(
             padding: const EdgeInsets.only(left: 8.0),
             child: Text(
-              (_selectedDay != null)
-                  ? DateFormat.MMMEd().format(_selectedDay!) // selected one day
+              (_selectedDays.length == 1)
+                  ? DateFormat.MMMEd().format(_selectedDays.first) // selected one day
                   : ((_rangeStart != null && _rangeEnd != null)
                       ? '${DateFormat.MMMEd().format(_rangeStart!)} - ${DateFormat.MMMEd().format(_rangeEnd!)}' // selected full range
                       : (_rangeStart != null || _rangeEnd != null)
@@ -238,25 +223,26 @@ class _CalendarTableState extends State<CalendarTable> {
             ),
           ),
         ),
-        Expanded(
-          child: ValueListenableBuilder<List<Lesson>>(
-            valueListenable: _selectedEvents,
-            builder: (context, value, _) {
-              return ListView.builder(
-                itemCount: value.length,
-                itemBuilder: (context, index) {
-                  var lesson = value[index];
-                  var course = coursesController.courses.firstWhere((element) => element.id == lesson.courseId);
-                  return LessonTile(
-                    course: course,
-                    lesson: lesson,
-                    showDate: _rangeSelectionMode == RangeSelectionMode.toggledOn,
-                  );
-                },
-              );
-            },
-          ),
-        ),
+        Expanded(child: Obx(
+          () {
+            var lists = _selectedDays
+                .map((e) => coursesController.eachDateLessons[e] ?? [])
+                .expand((element) => element)
+                .toList();
+            return ListView.builder(
+              itemCount: lists.length,
+              itemBuilder: (context, index) {
+                var lesson = lists[index];
+                var course = coursesController.courses.firstWhere((element) => element.id == lesson.courseId);
+                return LessonTile(
+                  course: course,
+                  lesson: lesson,
+                  showDate: _rangeSelectionMode == RangeSelectionMode.toggledOn,
+                );
+              },
+            );
+          },
+        )),
       ],
     );
     return body;

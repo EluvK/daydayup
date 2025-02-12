@@ -2,6 +2,7 @@ import 'package:daydayup/components/brief.dart';
 import 'package:daydayup/components/calendar.dart';
 import 'package:daydayup/components/courses.dart';
 import 'package:daydayup/components/setting.dart';
+import 'package:daydayup/controller/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -27,9 +28,9 @@ class PhoneHomePageTab extends StatefulWidget {
 }
 
 class _PhoneHomePageTabState extends State<PhoneHomePageTab> {
-  int tabIndex = 1;
   late List<Widget> listScreens;
   late PageController _pageController;
+  final settingController = Get.find<SettingController>();
 
   @override
   void initState() {
@@ -40,7 +41,7 @@ class _PhoneHomePageTabState extends State<PhoneHomePageTab> {
       Courses(),
       Setting(),
     ];
-    _pageController = PageController(initialPage: tabIndex);
+    _pageController = PageController(initialPage: settingController.getCurrentMainPage());
   }
 
   @override
@@ -56,16 +57,16 @@ class _PhoneHomePageTabState extends State<PhoneHomePageTab> {
         controller: _pageController,
         onPageChanged: (int index) {
           setState(() {
-            tabIndex = index;
+            settingController.setCurrentMainPage(index);
           });
         },
         children: listScreens,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: tabIndex,
+        currentIndex: settingController.getCurrentMainPage(),
         onTap: (int index) {
           setState(() {
-            tabIndex = index;
+            settingController.setCurrentMainPage(index);
             _pageController.jumpToPage(index);
           });
         },
