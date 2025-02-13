@@ -75,6 +75,14 @@ class CourseGroup {
     required this.description,
   });
 
+  CourseGroup clone() {
+    return CourseGroup(
+      id: id,
+      name: name,
+      description: description,
+    );
+  }
+
   factory CourseGroup.fromJson(Map<String, dynamic> json) => _$CourseGroupFromJson(json);
   Map<String, dynamic> toJson() => _$CourseGroupToJson(this);
 }
@@ -94,6 +102,16 @@ class CourseGroupBill {
     required this.time,
     required this.amount,
   });
+
+  CourseGroupBill clone() {
+    return CourseGroupBill(
+      id: id,
+      groupId: groupId,
+      description: description,
+      time: time,
+      amount: amount,
+    );
+  }
 
   factory CourseGroupBill.fromJson(Map<String, dynamic> json) => _$CourseGroupBillFromJson(json);
   Map<String, dynamic> toJson() => _$CourseGroupBillToJson(this);
@@ -129,6 +147,19 @@ class Course {
     required this.color,
   });
 
+  Course clone() {
+    return Course(
+      id: id,
+      name: name,
+      groupId: groupId,
+      user: user.clone(),
+      description: description,
+      timeTable: timeTable.clone(),
+      pattern: pattern.clone(),
+      color: color,
+    );
+  }
+
   factory Course.fromJson(Map<String, dynamic> json) => _$CourseFromJson(json);
   Map<String, dynamic> toJson() => _$CourseToJson(this);
 }
@@ -154,6 +185,18 @@ class Lesson {
     required this.status,
   });
 
+  Lesson clone() {
+    return Lesson(
+      courseId: courseId,
+      id: id,
+      name: name,
+      user: user.clone(),
+      startTime: startTime,
+      endTime: endTime,
+      status: status,
+    );
+  }
+
   factory Lesson.fromJson(Map<String, dynamic> json) => _$LessonFromJson(json);
   Map<String, dynamic> toJson() => _$LessonToJson(this);
 }
@@ -172,6 +215,15 @@ class CourseTimeTable {
     required this.duration,
   });
 
+  CourseTimeTable clone() {
+    return CourseTimeTable(
+      startDate: startDate,
+      daysOfWeek: List<String>.from(daysOfWeek),
+      lessonStartTime: lessonStartTime,
+      duration: duration,
+    );
+  }
+
   factory CourseTimeTable.fromJson(Map<String, dynamic> json) => _$CourseTimeTableFromJson(json);
   Map<String, dynamic> toJson() => _$CourseTimeTableToJson(this);
 }
@@ -185,6 +237,13 @@ class Pattern {
     required this.type,
     required this.value,
   });
+
+  Pattern clone() {
+    return Pattern(
+      type: type,
+      value: value,
+    );
+  }
 
   factory Pattern.fromJson(Map<String, dynamic> json) => _$PatternFromJson(json);
   Map<String, dynamic> toJson() => _$PatternToJson(this);
@@ -202,6 +261,14 @@ class User {
     required this.name,
     required this.color,
   });
+
+  User clone() {
+    return User(
+      id: id,
+      name: name,
+      color: color,
+    );
+  }
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
@@ -226,7 +293,6 @@ enum PatternType {
   @JsonValue(200)
   costClassTimeUnit,
 }
-
 
 extension LessonStatusExtension on LessonStatus {
   String get name {
@@ -254,5 +320,4 @@ extension LessonStatusExtension on LessonStatus {
         return Colors.red;
     }
   }
-  
 }

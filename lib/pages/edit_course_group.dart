@@ -51,7 +51,7 @@ class _EditCourseGroupState extends State<EditCourseGroup> {
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: _EditCourseGroupInner(courseGroup: coursesController.getCourseGroup(widget.courseGroupId!)),
+      child: _EditCourseGroupInner(courseGroup: coursesController.getCourseGroup(widget.courseGroupId!).clone()),
     );
   }
 }

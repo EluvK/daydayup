@@ -65,7 +65,7 @@ class _EditCourseState extends State<EditCourse> {
     } else {
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: _EditCourseInner(course: coursesController.getCourse(widget.courseId!)),
+        child: _EditCourseInner(course: coursesController.getCourse(widget.courseId!).clone()),
       );
     }
   }
@@ -454,14 +454,14 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
   var futureCount = course.pattern.value.toInt() - completedCount;
 
   int generateCount = 0;
-  DateTime courseDate = resultLessons.isEmpty ? course.timeTable.startDate : resultLessons.last.endTime;
+  DateTime courseDate = (resultLessons.isEmpty ? course.timeTable.startDate : resultLessons.last.endTime).toLocal();
   while (generateCount < futureCount) {
     if (course.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))) {
       var startTime = courseDate
-          .copyWith(hour: course.timeTable.lessonStartTime.hour, minute: course.timeTable.lessonStartTime.minute)
+          .copyWith(hour: course.timeTable.lessonStartTime.toLocal().hour, minute: course.timeTable.lessonStartTime.toLocal().minute)
           .toUtc();
       var endTime = courseDate
-          .copyWith(hour: course.timeTable.lessonStartTime.hour, minute: course.timeTable.lessonStartTime.minute)
+          .copyWith(hour: course.timeTable.lessonStartTime.toLocal().hour, minute: course.timeTable.lessonStartTime.toLocal().minute)
           .add(course.timeTable.duration)
           .toUtc();
       resultLessons.add(Lesson(

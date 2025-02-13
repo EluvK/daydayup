@@ -43,7 +43,7 @@ class _EditLessonState extends State<EditLesson> {
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: _EditLessonInner(lesson: coursesController.getCourseLesson(widget.courseId!, widget.lessonId!)),
+      child: _EditLessonInner(lesson: coursesController.getCourseLesson(widget.courseId!, widget.lessonId!).clone()),
     );
   }
 }
@@ -59,6 +59,7 @@ class _EditLessonInner extends StatefulWidget {
 class __EditLessonInnerState extends State<_EditLessonInner> {
   final coursesController = Get.find<CoursesController>();
   late final Course course = coursesController.getCourse(widget.lesson.courseId);
+  late final lessonOriginalStatus = widget.lesson.status;
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -78,6 +79,10 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
           onChange: (value) {
             setState(() {
               widget.lesson.status = value;
+              if (value != lessonOriginalStatus) {
+                // might need to update course arrangement
+                reCalculateLessons(value, lessonOriginalStatus);
+              }
             });
           },
         ),
@@ -105,13 +110,36 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
         // 保存
         ElevatedButton(
           onPressed: () async {
-            await coursesController.updateLesson(widget.lesson);
-            Get.offAllNamed('/');
-            Get.toNamed('/view-lesson', arguments: [widget.lesson.courseId, widget.lesson.id]);
+            if (validateUserInput()) {
+              await coursesController.updateLesson(widget.lesson);
+              Get.offAllNamed('/');
+              Get.toNamed('/view-lesson', arguments: [widget.lesson.courseId, widget.lesson.id]);
+            }
           },
           child: const Text('保存'),
         ),
+        Divider(),
+
+        // 课程影响预览
       ],
     );
+  }
+
+  bool validateUserInput() {
+    final now = DateTime.now();
+    if (widget.lesson.status == LessonStatus.notStarted && widget.lesson.endTime.isBefore(now)) {
+      Get.snackbar('错误', '课程时间已过，状态不能为未完成');
+      return false;
+    }
+
+    return true;
+  }
+
+  void reCalculateLessons(LessonStatus newStatus, LessonStatus oldStatus) {
+    if (newStatus == oldStatus) {
+      // clear work
+      return;
+    }
+    // if (newStatus)
   }
 }

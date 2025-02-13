@@ -14,7 +14,7 @@ class TimePickerWidget extends StatelessWidget {
   final void Function(DateTime)? onChange;
 
   late final DateTimePickerType pickerType = timeTitle.pickerType;
-  late final ValueNotifier<DateTime> date = ValueNotifier(initialValue ?? DateTime.now());
+  late final ValueNotifier<DateTime> date = ValueNotifier(initialValue?.toLocal() ?? DateTime.now());
 
   @override
   Widget build(BuildContext context) {
@@ -53,14 +53,14 @@ class TimePickerWidget extends StatelessWidget {
             onChanged: (value) {
               date.value = value;
               if (onChange != null) {
-                onChange!(value);
+                onChange!(value.toUtc());
               }
             },
           );
           if (result != null) {
             date.value = result;
             if (onChange != null) {
-              onChange!(result);
+              onChange!(result.toUtc());
             }
             print('result: $result');
           }
