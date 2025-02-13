@@ -63,9 +63,8 @@ class _UserSettingState extends State<UserSetting> {
           Divider(),
           ListView.builder(
             shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: users.length + 1,
-            // padding: const EdgeInsets.symmetric(vertical: 20.0),
-
             itemBuilder: (context, index) {
               return index == users.length
                   ? Padding(
@@ -118,8 +117,20 @@ class AppSetting extends StatefulWidget {
 }
 
 class _AppSettingState extends State<AppSetting> {
+  final settingController = Get.find<SettingController>();
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('// 测试按钮'),
+        ElevatedButton(
+          onPressed: () {
+            settingController.setLastUpdateLessonStatusTime(DateTime(1999));
+          },
+          child: Text('重置自动更新时间'),
+        ),
+      ],
+    );
   }
 }

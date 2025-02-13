@@ -1,7 +1,9 @@
+import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/model/db.dart';
 import 'package:daydayup/utils/utils.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class CoursesController extends GetxController {
   final RxList<CourseGroup> courseGroups = <CourseGroup>[].obs;
@@ -12,6 +14,7 @@ class CoursesController extends GetxController {
 
   @override
   Future<void> onInit() async {
+    _beginInit = true;
     courseGroups.value = await DataBase().getCourseGroups();
     courses.value = await DataBase().getCourses();
     for (final course in courses) {
@@ -22,14 +25,70 @@ class CoursesController extends GetxController {
 
     super.onInit();
     _initialized = true;
+    delayInitTasks();
   }
 
+  bool _beginInit = false;
   bool _initialized = false;
   Future<void> ensureInitialization() async {
-    while (!_initialized) {
+    if (!_beginInit) {
       await onInit();
     }
+    while (!_initialized) {
+      await Future.delayed(Duration(milliseconds: 100));
+    }
     return;
+  }
+
+  Future<void> delayInitTasks() async {
+    Future<void> finishPassingLessons() async {
+      final settingController = Get.find<SettingController>();
+      var lastUpdateLessonStatusTime = settingController.lastUpdateLessonStatusTime;
+      final now = DateTime.now();
+      var count = 0;
+      var lessonSummaries = '';
+      print('eachDateLessons length: ${eachDateLessons.length}');
+      final sortedKeys = eachDateLessons.keys.toList()..sort();
+      for (final key in sortedKeys) {
+        // print('date: $key');
+
+        final lessons = eachDateLessons[key] ?? [];
+        if (key.isBefore(lastUpdateLessonStatusTime)) {
+          continue;
+        }
+        for (final lesson in lessons) {
+          print(
+              'lesson: ${lesson.startTime} ${lesson.name} ${lesson.status}: ${(lesson.status == LessonStatus.notStarted && lesson.endTime.isBefore(now))}');
+          if (lesson.status == LessonStatus.notStarted && lesson.endTime.isBefore(now)) {
+            lesson.status = LessonStatus.finished;
+            await DataBase().updateLesson(lesson);
+            // print('update lesson status from notStarted to finished: at ${lesson.startTime} ${lesson.name}');
+            lessonSummaries += lessonSummaries.isNotEmpty ? '\n' : '';
+            lessonSummaries += '- ${DateFormat.yMd().format(lesson.startTime.toLocal())}: ${lesson.name}';
+            count++;
+          }
+        }
+        if (key.isAfter(now)) {
+          print('break: $key is after $now');
+          break;
+        }
+      }
+      if (count > 0) {
+        Get.snackbar('已自动将 $count 节课堂标记为完成:', lessonSummaries);
+      }
+      print('update $count lessons status from notStarted to finished');
+      // rebuild status.
+      for (final course in courses) {
+        courseLessons[course.id] = await DataBase().getLessons(course.id);
+        courseStatus[course.id] = CourseStatus.fromCourses(course, courseLessons[course.id]!);
+      }
+      await rebuildEachDateLessons();
+
+      settingController.setLastUpdateLessonStatusTime(now);
+    }
+
+    await Future.delayed(Duration(milliseconds: 100));
+    await finishPassingLessons();
   }
 
   Future<void> rebuildEachDateLessons() async {

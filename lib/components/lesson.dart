@@ -46,12 +46,15 @@ class LessonTile extends StatelessWidget {
         },
         child: Row(
           children: [
-            Column(
-              children: [
-                if (showUser) UserAvatar(user: course.user, isSelected: false),
-                SizedBox(height: 4),
-                lessonStatusWidget(lesson),
-              ],
+            ConstrainedBox(
+              constraints: BoxConstraints(minWidth: 60),
+              child: Column(
+                children: [
+                  if (showUser) UserAvatar(user: course.user, isSelected: false),
+                  SizedBox(height: 4),
+                  lessonStatusWidget(lesson),
+                ],
+              ),
             ),
             Expanded(
               child: ListTile(

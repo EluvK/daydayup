@@ -15,12 +15,14 @@ class SettingController extends GetxController {
   final RxString defaultUserId = ''.obs;
 
   final mainPageAtStartup = 1.obs;
+  DateTime lastUpdateLessonStatusTime = DateTime.now();
 
   // running cache
   final currentMainPage = 0.obs;
 
   @override
-  void onInit() async {
+  Future<void> onInit() async {
+    _beginInit = true;
     // app settings
     String themeText = box.read('theme') ?? 'system';
     print('read theme from box $themeText');
@@ -44,7 +46,27 @@ class SettingController extends GetxController {
     mainPageAtStartup.value = box.read('mainPageAtStartup') ?? 1;
     currentMainPage.value = mainPageAtStartup.value;
 
+    if (box.read('lastUpdateLessonStatusTime') != null) {
+      lastUpdateLessonStatusTime = DateTime.parse(box.read('lastUpdateLessonStatusTime'));
+    } else {
+      lastUpdateLessonStatusTime = DateTime.fromMicrosecondsSinceEpoch(0).toUtc();
+    }
+    print('lastUpdateLessonStatusTime is $lastUpdateLessonStatusTime');
+
     super.onInit();
+    _initialized = true;
+  }
+
+  bool _beginInit = false;
+  bool _initialized = false;
+  Future<void> ensureInitialization() async {
+    if (!_beginInit) {
+      await onInit();
+    }
+    while (!_initialized) {
+      await Future.delayed(Duration(milliseconds: 100));
+    }
+    return;
   }
 
   setThemeMode(ThemeMode theme) {
@@ -91,5 +113,15 @@ class SettingController extends GetxController {
 
   void setCurrentMainPage(int index) {
     currentMainPage.value = index;
+  }
+
+  DateTime getLastUpdateLessonStatusTime() {
+    return lastUpdateLessonStatusTime;
+  }
+
+  void setLastUpdateLessonStatusTime(DateTime time) {
+    time = time.toUtc();
+    lastUpdateLessonStatusTime = time;
+    box.write('lastUpdateLessonStatusTime', time.toString());
   }
 }

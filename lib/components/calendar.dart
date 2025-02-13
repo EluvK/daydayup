@@ -121,9 +121,8 @@ class _CalendarTableState extends State<CalendarTable> {
 
   @override
   Widget build(BuildContext context) {
-    var body = Column(
+    return ListView(
       children: [
-        // todo add a filter
         ValueListenableBuilder<DateTime>(
           valueListenable: _focusedDay,
           builder: (context, value, _) {
@@ -225,13 +224,15 @@ class _CalendarTableState extends State<CalendarTable> {
             ),
           ),
         ),
-        Expanded(child: Obx(
+        Obx(
           () {
             var lists = _selectedDays
                 .map((e) => coursesController.eachDateLessons[e] ?? [])
                 .expand((element) => element)
                 .toList();
             return ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
               itemCount: lists.length,
               itemBuilder: (context, index) {
                 var lesson = lists[index];
@@ -244,10 +245,9 @@ class _CalendarTableState extends State<CalendarTable> {
               },
             );
           },
-        )),
+        ),
       ],
     );
-    return body;
   }
 }
 

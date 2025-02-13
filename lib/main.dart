@@ -27,14 +27,16 @@ void main() async {
   }
 
   await Get.putAsync(() async {
-    final controller = CoursesController();
-    return controller;
-  });
-  await Get.putAsync(() async {
     final controller = SettingController();
     return controller;
   });
+  final settingController = Get.find<SettingController>();
+  await settingController.ensureInitialization();
 
+  await Get.putAsync(() async {
+    final controller = CoursesController();
+    return controller;
+  });
   final coursesController = Get.find<CoursesController>();
   await coursesController.ensureInitialization();
 
