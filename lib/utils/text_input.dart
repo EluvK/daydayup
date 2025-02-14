@@ -7,12 +7,14 @@ class TextInputWidget extends StatelessWidget {
     required this.title,
     required this.onChanged,
     required this.initialValue,
+    this.onFocusChange,
     this.autoFocus = false,
   });
   final focusNode = FocusNode();
 
   final InputTitleEnum title;
   final String initialValue;
+  final void Function(bool)? onFocusChange;
   final bool autoFocus;
   final void Function(String) onChanged;
 
@@ -24,6 +26,7 @@ class TextInputWidget extends StatelessWidget {
         onTap: () {
           focusNode.requestFocus();
         },
+        onFocusChange: onFocusChange,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
           child: Row(
@@ -141,17 +144,20 @@ class NumberInputWidget extends StatelessWidget {
     required this.title,
     required this.initialValue,
     required this.onChanged,
+    this.onFocusChange,
   });
   final focusNode = FocusNode();
   final NumberInputEnum title;
   final double initialValue;
   final void Function(double) onChanged;
+  final void Function(bool)? onFocusChange;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
+        onFocusChange: onFocusChange,
         onTap: () {
           focusNode.requestFocus();
         },

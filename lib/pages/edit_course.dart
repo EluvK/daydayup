@@ -115,19 +115,17 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
       children: [
         // 基本信息
         Align(alignment: Alignment.topLeft, child: Text('基本信息')),
-        Focus(
-          onFocusChange: (hasFocus) {
-            if (!hasFocus) {
+        TextInputWidget(
+          title: InputTitleEnum.courseName,
+          onChanged: (value) {
+            editCourse.name = value;
+          },
+          initialValue: editCourse.name,
+          onFocusChange: (isFocus) {
+            if (!isFocus) {
               tryCalculateExpectedLessons();
             }
           },
-          child: TextInputWidget(
-            title: InputTitleEnum.courseName,
-            onChanged: (value) {
-              editCourse.name = value;
-            },
-            initialValue: editCourse.name,
-          ),
         ),
         TextInputWidget(
           title: InputTitleEnum.anyDescription,
@@ -365,7 +363,11 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           initialValue: editCourse.pattern.value,
           onChanged: (value) {
             editCourse.pattern.value = value;
-            tryCalculateExpectedLessons();
+          },
+          onFocusChange: (isFocus) {
+            if (!isFocus) {
+              tryCalculateExpectedLessons();
+            }
           },
         ),
     ];
@@ -378,7 +380,11 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         initialValue: editCourse.pattern.value,
         onChanged: (value) {
           editCourse.pattern.value = value;
-          tryCalculateExpectedLessons();
+        },
+        onFocusChange: (isFocus) {
+          if (!isFocus) {
+            tryCalculateExpectedLessons();
+          }
         },
       ),
     ];
