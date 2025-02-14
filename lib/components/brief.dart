@@ -1,4 +1,6 @@
+import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
+import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -34,33 +36,74 @@ class _BriefTableState extends State<BriefTable> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        // maybe add a user filter
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              "今日: ${_today()}",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
+    return Obx(() {
+      List<Lesson> todayLessons = coursesController.eachDateLessons[_todayDate()] ?? [];
+      List<Lesson> thisWeekLessons = daysInRange(_thisWeekBeginDate(), _thisWeekEndDate())
+          .map((date) => coursesController.eachDateLessons[date])
+          .map((e) => e ?? [])
+          .expand((element) => element)
+          .toList();
 
-        Divider(),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              '本周: ${_thisWeek()}',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      return ListView(
+        children: [
+          // maybe add a user filter
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "今日: ${_today()}",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
-        ),
-      ],
-    );
+          if (todayLessons.isNotEmpty)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: todayLessons.length,
+              itemBuilder: (context, index) {
+                var lesson = todayLessons[index];
+                var course = coursesController.courses.firstWhere((element) => element.id == lesson.courseId);
+                return LessonTile(
+                  course: course,
+                  lesson: lesson,
+                  showDate: false,
+                );
+              },
+            ),
+          if (todayLessons.isEmpty) Center(child: Text('今日无课程', style: TextStyle(fontSize: 16))),
+
+          Divider(),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                '本周: ${_thisWeek()}',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          if (thisWeekLessons.isNotEmpty)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: thisWeekLessons.length,
+              itemBuilder: (context, index) {
+                var lesson = thisWeekLessons[index];
+                var course = coursesController.courses.firstWhere((element) => element.id == lesson.courseId);
+                return LessonTile(
+                  course: course,
+                  lesson: lesson,
+                  showDate: true,
+                );
+              },
+            ),
+          if (thisWeekLessons.isEmpty) Center(child: Text('本周无课程', style: TextStyle(fontSize: 16))),
+        ],
+      );
+    });
   }
 }
 
