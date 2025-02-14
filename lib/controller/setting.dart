@@ -1,3 +1,4 @@
+import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/model/db.dart';
 import 'package:flutter/material.dart';
@@ -89,13 +90,16 @@ class SettingController extends GetxController {
     return users.firstWhere((user) => user.id == userId);
   }
 
-  void upsertUser(User user) {
-    if (users.contains(user)) {
-      users[users.indexWhere((u) => u.id == user.id)] = user;
-    } else {
-      users.add(user);
-    }
-    DataBase().upsertUser(user);
+  Future<void> addNewUser(User user) async {
+    users.add(user);
+    await DataBase().upsertUser(user);
+  }
+
+  Future<void> updateUser(User user) async {
+    users[users.indexWhere((u) => u.id == user.id)] = user;
+    await DataBase().upsertUser(user);
+    // update everywhere user is used
+    updateAnyUserInfos(user);
   }
 
   int getMainPageAtStartup() {
@@ -123,5 +127,10 @@ class SettingController extends GetxController {
     time = time.toUtc();
     lastUpdateLessonStatusTime = time;
     box.write('lastUpdateLessonStatusTime', time.toString());
+  }
+
+  Future<void> updateAnyUserInfos(User user) async {
+    final coursesController = Get.find<CoursesController>();
+    coursesController.updateAnyUserInfos(user);
   }
 }

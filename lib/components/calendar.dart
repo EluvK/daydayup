@@ -39,7 +39,7 @@ class CalendarTable extends StatefulWidget {
 }
 
 class _CalendarTableState extends State<CalendarTable> {
-  final ValueNotifier<DateTime> _focusedDay = ValueNotifier(regularDateTimeToDate(DateTime.now()));
+  final ValueNotifier<DateTime> _focusedDay = ValueNotifier(keepOnlyDay(DateTime.now()));
   final Set<DateTime> _selectedDays = LinkedHashSet<DateTime>(
     equals: isSameDay,
     hashCode: getHashCode,
@@ -71,7 +71,7 @@ class _CalendarTableState extends State<CalendarTable> {
   bool get canToggleOnRange => _rangeSelectionMode != RangeSelectionMode.toggledOn;
 
   List<Lesson> _getEventsForDay(DateTime day) {
-    return coursesController.eachDateLessons[day] ?? [];
+    return coursesController.eachDateLessons[utc2LocalDay(day)] ?? [];
   }
 
   // List<Lesson> _getEventsForRange(DateTime start, DateTime end) {
@@ -85,13 +85,7 @@ class _CalendarTableState extends State<CalendarTable> {
     print('_onDaySelected: $selectedDay, focusedDay: $focusedDay');
     setState(() {
       _selectedDays.clear();
-      _selectedDays.add(selectedDay);
-      // if (_selectedDays.contains(selectedDay)) {
-      //   _selectedDays.remove(selectedDay);
-      // } else {
-      //   _selectedDays.clear();
-      //   _selectedDays.add(selectedDay);
-      // }
+      _selectedDays.add(utc2LocalDay(selectedDay));
       _focusedDay.value = focusedDay;
       _rangeStart = null;
       _rangeEnd = null;
@@ -101,6 +95,12 @@ class _CalendarTableState extends State<CalendarTable> {
 
   void _onRangeSelected(DateTime? start, DateTime? end, DateTime focusedDay) {
     print('_onRangeSelected: $start, $end, $focusedDay');
+    if (start != null) {
+      start = utc2LocalDay(start);
+    }
+    if (end != null) {
+      end = utc2LocalDay(end);
+    }
     setState(() {
       _focusedDay.value = focusedDay;
       _rangeStart = start;

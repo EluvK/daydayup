@@ -95,8 +95,8 @@ class CoursesController extends GetxController {
     eachDateLessons.clear();
     var allLessons = await DataBase().getAllLessons();
     for (final lesson in allLessons) {
-      var date = regularDateTimeToDate(lesson.startTime);
-      // print('regularDateTimeToDate: $date');
+      var date = utc2LocalDay(lesson.startTime);
+      print('rebuildEachDateLessons: $date');
       if (eachDateLessons[date] == null) {
         // print('new date: $date');
         eachDateLessons[date] = <Lesson>[];
@@ -146,7 +146,7 @@ class CoursesController extends GetxController {
 
   Future<void> upsertCourse(Course course, List<Lesson> lessons) async {
     await DataBase().upsertCourse(course);
-    await DataBase().upsertLessons(lessons);
+    await DataBase().replaceCourseLessons(course.id, lessons);
 
     if (courses.indexWhere((element) => element.id == course.id) == -1) {
       courses.add(course);
@@ -183,6 +183,24 @@ class CoursesController extends GetxController {
     courseStatus[lesson.courseId] =
         CourseStatus.fromCourses(getCourse(lesson.courseId), courseLessons[lesson.courseId]!);
     await DataBase().updateLesson(lesson);
+    await rebuildEachDateLessons();
+  }
+
+  // update any for anythings.
+  Future<void> updateAnyUserInfos(User user) async {
+    // course.user && lesson.user
+    for (final course in courses) {
+      if (course.user.id == user.id) {
+        course.user = user;
+        await DataBase().upsertCourse(course);
+      }
+    }
+    for (final lesson in courseLessons.values.expand((element) => element)) {
+      if (lesson.user.id == user.id) {
+        lesson.user = user;
+        await DataBase().updateLesson(lesson);
+      }
+    }
     await rebuildEachDateLessons();
   }
 }

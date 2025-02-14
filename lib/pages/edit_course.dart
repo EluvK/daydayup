@@ -60,20 +60,21 @@ class _EditCourseState extends State<EditCourse> {
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: _EditCourseInner(course: course),
+        child: _EditCourseInner(course: course, isCreateNew: true),
       );
     } else {
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: _EditCourseInner(course: coursesController.getCourse(widget.courseId!).clone()),
+        child: _EditCourseInner(course: coursesController.getCourse(widget.courseId!), isCreateNew: false),
       );
     }
   }
 }
 
 class _EditCourseInner extends StatefulWidget {
-  const _EditCourseInner({required this.course});
+  const _EditCourseInner({required this.course, required this.isCreateNew});
   final Course course;
+  final bool isCreateNew;
 
   @override
   State<_EditCourseInner> createState() => __EditCourseInnerState();
@@ -83,6 +84,8 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   final settingController = Get.find<SettingController>();
   final coursesController = Get.find<CoursesController>();
 
+  late Course editCourse;
+
   final RxList<String> dynamicDayOfWeek = <String>[].obs;
 
   late final List<Lesson> currentLessons = coursesController.getCourseLessons(widget.course.id);
@@ -90,16 +93,18 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
       currentLessons.where((element) => element.status == LessonStatus.notStarted).toList();
 
   final RxList<Lesson> expectedLessons = <Lesson>[].obs;
+  final RxList<Lesson> createNewViewLessons = <Lesson>[].obs;
 
   final RxBool viewCurrentFutureLessons = true.obs;
   final RxBool viewExpectedFutureLessons = false.obs;
 
   @override
   void initState() {
-    if (widget.course.timeTable.daysOfWeek.isEmpty) {
-      updateDayOfWeek(widget.course.timeTable.startDate);
+    editCourse = widget.course.clone();
+    if (widget.isCreateNew) {
+      updateDayOfWeek(editCourse.timeTable.startDate);
     } else {
-      dynamicDayOfWeek.value = widget.course.timeTable.daysOfWeek;
+      dynamicDayOfWeek.value = editCourse.timeTable.daysOfWeek;
     }
     super.initState();
   }
@@ -110,33 +115,41 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
       children: [
         // 基本信息
         Align(alignment: Alignment.topLeft, child: Text('基本信息')),
-        TextInputWidget(
-          title: InputTitleEnum.courseName,
-          onChanged: (value) {
-            widget.course.name = value;
+        Focus(
+          onFocusChange: (hasFocus) {
+            if (!hasFocus) {
+              tryCalculateExpectedLessons();
+            }
           },
-          initialValue: widget.course.name,
+          child: TextInputWidget(
+            title: InputTitleEnum.courseName,
+            onChanged: (value) {
+              editCourse.name = value;
+            },
+            initialValue: editCourse.name,
+          ),
         ),
         TextInputWidget(
           title: InputTitleEnum.anyDescription,
           onChanged: (value) {
-            widget.course.description = value;
+            editCourse.description = value;
           },
-          initialValue: widget.course.description,
+          initialValue: editCourse.description,
         ),
         UserPicker(
           onChanged: (selectedUserIds) {
             print("onChanged: $selectedUserIds");
-            widget.course.user = settingController.users.firstWhere((element) => element.id == selectedUserIds.first);
+            editCourse.user = settingController.users.firstWhere((element) => element.id == selectedUserIds.first);
           },
           candidateUsers: settingController.users,
-          initialUser: [widget.course.user],
+          initialUser: [editCourse.user],
         ),
         ColorPickerWidget(
           onChanged: (color) {
-            widget.course.color = color;
+            editCourse.color = color;
+            tryCalculateExpectedLessons();
           },
-          initialColor: widget.course.color,
+          initialColor: editCourse.color,
         ),
         Divider(),
 
@@ -152,13 +165,13 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                     ButtonSegment<PatternType>(value: PatternType.eachSingleLesson, tooltip: '单节', label: Text('单节')),
                     ButtonSegment<PatternType>(value: PatternType.costClassTimeUnit, tooltip: '课时', label: Text('课时')),
                   ],
-                  selected: {widget.course.pattern.type},
+                  selected: {editCourse.pattern.type},
                   onSelectionChanged: (Set<PatternType> newSelection) {
-                    widget.course.pattern.type = newSelection.first;
-                    if (widget.course.pattern.type == PatternType.costClassTimeUnit) {
-                      widget.course.pattern.value = 1;
+                    editCourse.pattern.type = newSelection.first;
+                    if (editCourse.pattern.type == PatternType.costClassTimeUnit) {
+                      editCourse.pattern.value = 1;
                     } else {
-                      widget.course.pattern.value = 10;
+                      editCourse.pattern.value = 10;
                     }
                     setState(() {});
                     // tryCalculateExpectedLessons(); // todo uncomment this line
@@ -166,9 +179,9 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                 ),
               ],
             )),
-        if (widget.course.pattern.type == PatternType.costClassTimeUnit)
+        if (editCourse.pattern.type == PatternType.costClassTimeUnit)
           for (var i in _buildCourseGroupInfo()) i,
-        if (widget.course.pattern.type == PatternType.eachSingleLesson)
+        if (editCourse.pattern.type == PatternType.eachSingleLesson)
           for (var i in _buildSingleCourseInfo()) i,
         Divider(),
 
@@ -177,29 +190,29 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseFirstDayTime,
           onChange: (date) {
-            widget.course.timeTable.startDate = date;
+            editCourse.timeTable.startDate = date;
             setState(() {
               updateDayOfWeek(date);
             });
             tryCalculateExpectedLessons();
           },
-          initialValue: widget.course.timeTable.startDate,
+          initialValue: editCourse.timeTable.startDate,
         ),
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseStartTime,
           onChange: (date) {
-            widget.course.timeTable.lessonStartTime = date;
+            editCourse.timeTable.lessonStartTime = date;
             // recalculate course end time
             setState(() {});
             tryCalculateExpectedLessons();
           },
-          initialValue: widget.course.timeTable.lessonStartTime,
+          initialValue: editCourse.timeTable.lessonStartTime,
         ),
         DurationPickerWidget(
-          initialValue: widget.course.timeTable.duration,
+          initialValue: editCourse.timeTable.duration,
           onChange: (duration) {
             print('get duration: $duration');
-            widget.course.timeTable.duration = duration;
+            editCourse.timeTable.duration = duration;
             // recalculate course end time
             setState(() {});
             tryCalculateExpectedLessons();
@@ -210,18 +223,18 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           onChange: (date) {
             print('set end time: $date');
             // recalculate course length
-            widget.course.timeTable.duration = date.difference(widget.course.timeTable.lessonStartTime);
-            print('course length: ${widget.course.timeTable.duration}');
+            editCourse.timeTable.duration = date.difference(editCourse.timeTable.lessonStartTime);
+            print('course length: ${editCourse.timeTable.duration}');
             setState(() {});
             tryCalculateExpectedLessons();
           },
-          initialValue: widget.course.timeTable.lessonStartTime.add(widget.course.timeTable.duration),
+          initialValue: editCourse.timeTable.lessonStartTime.add(editCourse.timeTable.duration),
         ),
         DayOfWeekPickerWidget(
           initialSelectedDays: dynamicDayOfWeek,
           onChanged: (days) {
             print('day of week: $days');
-            widget.course.timeTable.daysOfWeek = days;
+            editCourse.timeTable.daysOfWeek = days;
             // recalculate course day of week
             tryCalculateExpectedLessons();
           },
@@ -231,15 +244,14 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         // 保存
         ElevatedButton(
           onPressed: () async {
-            if (validateUserInput()) {
+            if (validateUserInput(showError: true)) {
               await tryCalculateExpectedLessons();
               await coursesController.upsertCourse(
-                widget.course,
-                // todo, make a preview of the lessons
-                reCalculateLessonsForEachSingle(currentLessons, widget.course),
+                editCourse,
+                reCalculateLessonsForEachSingle(currentLessons, editCourse),
               );
               Get.offAllNamed('/');
-              Get.toNamed('/view-course', arguments: [widget.course.id]);
+              Get.toNamed('/view-course', arguments: [editCourse.id]);
             }
           },
           child: Text('保存课程信息'),
@@ -248,38 +260,57 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
         // todo view course status
 
-        // 课程安排预览
+        // 新课程预览
+        if (widget.isCreateNew)
+          DynamicLessonList(
+            title: "课堂列表预览",
+            course: editCourse,
+            lessons: createNewViewLessons,
+            titleColor: Colors.red[300],
+            editable: false,
+          ),
+        // 修改课程安排预览
         if (viewCurrentFutureLessons.value)
           DynamicLessonList(
-            title: "当前计划中，未开始的课程 (${notStartedLessons.length})",
-            course: widget.course,
+            title: "当下课堂列表",
+            course: editCourse,
             lessons: notStartedLessons,
           ),
         if (viewExpectedFutureLessons.value)
           DynamicLessonList(
-            title: "修改后未来的课程 (${expectedLessons.length})",
-            course: widget.course,
+            title: "修改后课堂列表",
+            course: editCourse,
             lessons: expectedLessons,
             titleColor: Colors.red[300],
           ),
         Divider(),
 
         // dangerZone,
-        ElevatedButton(
-          // todo make it click twice to delete
-          onPressed: () {
-            coursesController.deleteCourse(widget.course.id);
-            Get.back();
-          },
-          child: const Text('删除课程', style: TextStyle(color: Colors.red)),
-        ),
+        if (!widget.isCreateNew)
+          ElevatedButton(
+            // todo make it click twice to delete
+            onPressed: () {
+              coursesController.deleteCourse(editCourse.id);
+              Get.offAllNamed('/');
+            },
+            child: const Text('删除课程', style: TextStyle(color: Colors.red)),
+          ),
       ],
     );
   }
 
   Future<void> tryCalculateExpectedLessons() async {
-    if (validateUserInput()) {
-      expectedLessons.value = reCalculateLessonsForEachSingle(currentLessons, widget.course);
+    if (!validateUserInput()) return;
+    if (widget.isCreateNew) {
+      createNewViewLessons.value = reCalculateLessonsForEachSingle(currentLessons, editCourse);
+      setState(() {
+        viewCurrentFutureLessons.value = false;
+        viewExpectedFutureLessons.value = false;
+      });
+      return;
+    }
+    if (editCourse.pattern.type == PatternType.eachSingleLesson) {
+      expectedLessons.value = reCalculateLessonsForEachSingle(currentLessons, editCourse);
       print('recalculated lessons: ${expectedLessons.length}');
       setState(() {
         viewExpectedFutureLessons.value = true;
@@ -292,34 +323,34 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
     var dayOfWeek = getDayOfWeek(date);
     print('day of week: $dayOfWeek');
     dynamicDayOfWeek.value = [dayOfWeek];
-    widget.course.timeTable.daysOfWeek = [dayOfWeek];
+    editCourse.timeTable.daysOfWeek = [dayOfWeek];
   }
 
-  bool validateUserInput() {
-    if (widget.course.name.isEmpty) {
-      Get.snackbar('❌ 错误', '课程名称不能为空');
+  bool validateUserInput({bool showError = false}) {
+    if (editCourse.name.isEmpty) {
+      if (showError) Get.snackbar('❌ 错误', '课程名称不能为空');
       return false;
     }
-    if (widget.course.timeTable.daysOfWeek.isEmpty) {
-      Get.snackbar('❌ 错误', '请选择星期几上课');
+    if (editCourse.timeTable.daysOfWeek.isEmpty) {
+      if (showError) Get.snackbar('❌ 错误', '请选择星期几上课');
       return false;
     }
-    switch (widget.course.pattern.type) {
+    switch (editCourse.pattern.type) {
       case PatternType.costClassTimeUnit:
-        if (widget.course.groupId == null) {
-          Get.snackbar('❌ 错误', '请选择课程组');
+        if (editCourse.groupId == null) {
+          if (showError) Get.snackbar('❌ 错误', '请选择课程组');
           return false;
         }
         break;
       case PatternType.eachSingleLesson:
         break;
     }
-    if (widget.course.pattern.value <= 0) {
-      Get.snackbar('❌ 错误', '课时/节数应该大于0');
+    if (editCourse.pattern.value <= 0) {
+      if (showError) Get.snackbar('❌ 错误', '课时/节数应该大于0');
       return false;
     }
-    if (widget.course.timeTable.duration.inMinutes == 0) {
-      Get.snackbar('❌ 错误', '课程时长不应该为0');
+    if (editCourse.timeTable.duration.inMinutes == 0) {
+      if (showError) Get.snackbar('❌ 错误', '课程时长不应该为0');
       return false;
     }
     return true;
@@ -331,9 +362,10 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
       if (coursesController.courseGroups.isNotEmpty)
         NumberInputWidget(
           title: NumberInputEnum.courseCostClassTimeUnit,
-          initialValue: widget.course.pattern.value,
+          initialValue: editCourse.pattern.value,
           onChanged: (value) {
-            widget.course.pattern.value = value;
+            editCourse.pattern.value = value;
+            tryCalculateExpectedLessons();
           },
         ),
     ];
@@ -343,9 +375,10 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
     return [
       NumberInputWidget(
         title: NumberInputEnum.courseLength,
-        initialValue: widget.course.pattern.value,
+        initialValue: editCourse.pattern.value,
         onChanged: (value) {
-          widget.course.pattern.value = value;
+          editCourse.pattern.value = value;
+          tryCalculateExpectedLessons();
         },
       ),
     ];
@@ -417,11 +450,11 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: 36),
                 child: DropdownButton<String>(
-                  value: widget.course.groupId,
+                  value: editCourse.groupId,
                   isExpanded: true,
                   onChanged: (String? newValue) {
                     setState(() {
-                      widget.course.groupId = newValue;
+                      editCourse.groupId = newValue;
                     });
                   },
                   icon: const Icon(Icons.arrow_drop_down),
@@ -454,14 +487,19 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
   var futureCount = course.pattern.value.toInt() - completedCount;
 
   int generateCount = 0;
-  DateTime courseDate = (resultLessons.isEmpty ? course.timeTable.startDate : resultLessons.last.endTime).toLocal();
+  DateTime courseDate = (resultLessons.isEmpty ? course.timeTable.startDate : nowTime).toLocal();
+  print('reCal start from: $courseDate');
   while (generateCount < futureCount) {
     if (course.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))) {
       var startTime = courseDate
-          .copyWith(hour: course.timeTable.lessonStartTime.toLocal().hour, minute: course.timeTable.lessonStartTime.toLocal().minute)
+          .copyWith(
+              hour: course.timeTable.lessonStartTime.toLocal().hour,
+              minute: course.timeTable.lessonStartTime.toLocal().minute)
           .toUtc();
       var endTime = courseDate
-          .copyWith(hour: course.timeTable.lessonStartTime.toLocal().hour, minute: course.timeTable.lessonStartTime.toLocal().minute)
+          .copyWith(
+              hour: course.timeTable.lessonStartTime.toLocal().hour,
+              minute: course.timeTable.lessonStartTime.toLocal().minute)
           .add(course.timeTable.duration)
           .toUtc();
       resultLessons.add(Lesson(
@@ -471,7 +509,7 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
         courseId: course.id,
         startTime: startTime,
         endTime: endTime,
-        status: LessonStatus.notStarted,
+        status: endTime.isBefore(nowTime) ? LessonStatus.finished : LessonStatus.notStarted,
       ));
       generateCount++;
     }

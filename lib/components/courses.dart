@@ -58,7 +58,7 @@ class CoursesTable extends StatefulWidget {
 }
 
 class _CoursesTableState extends State<CoursesTable> {
-  var coursesController = Get.find<CoursesController>();
+  final coursesController = Get.find<CoursesController>();
 
   @override
   Widget build(BuildContext context) {

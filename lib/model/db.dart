@@ -256,27 +256,45 @@ class DataBase {
   }
 
   // lesson
-  Future<void> upsertLesson(Lesson lesson) async {
+  Future<void> replaceCourseLessons(String courseId, List<Lesson> lessons) async {
     final db = await getDb();
-    await db.insert(
-      'lessons',
-      lesson.toJson(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.transaction((txn) async {
+      await txn.delete(
+        'lessons',
+        where: 'courseId = ?',
+        whereArgs: [courseId],
+      );
+      for (final lesson in lessons) {
+        await txn.insert(
+          'lessons',
+          lesson.toJson(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
-  Future<void> upsertLessons(List<Lesson> lessons) async {
-    final db = await getDb();
-    final batch = db.batch();
-    for (final lesson in lessons) {
-      batch.insert(
-        'lessons',
-        lesson.toJson(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    await batch.commit(noResult: true);
-  }
+  // Future<void> upsertLesson(Lesson lesson) async {
+  //   final db = await getDb();
+  //   await db.insert(
+  //     'lessons',
+  //     lesson.toJson(),
+  //     conflictAlgorithm: ConflictAlgorithm.replace,
+  //   );
+  // }
+
+  // Future<void> upsertLessons(List<Lesson> lessons) async {
+  //   final db = await getDb();
+  //   final batch = db.batch();
+  //   for (final lesson in lessons) {
+  //     batch.insert(
+  //       'lessons',
+  //       lesson.toJson(),
+  //       conflictAlgorithm: ConflictAlgorithm.replace,
+  //     );
+  //   }
+  //   await batch.commit(noResult: true);
+  // }
 
   Future<void> updateLesson(Lesson lesson) async {
     final db = await getDb();

@@ -44,19 +44,23 @@ class _EditUserState extends State<EditUser> {
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: _EditUserInner(user: user),
+        child: _EditUserInner(user: user, isCreateNew: true),
       );
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: _EditUserInner(user: settingController.getUser(widget.userId!)),
+      child: _EditUserInner(
+        user: settingController.getUser(widget.userId!),
+        isCreateNew: false,
+      ),
     );
   }
 }
 
 class _EditUserInner extends StatefulWidget {
-  const _EditUserInner({required this.user});
+  const _EditUserInner({required this.user, required this.isCreateNew});
   final User user;
+  final bool isCreateNew;
 
   @override
   State<_EditUserInner> createState() => __EditUserInnerState();
@@ -64,6 +68,15 @@ class _EditUserInner extends StatefulWidget {
 
 class __EditUserInnerState extends State<_EditUserInner> {
   final settingController = Get.find<SettingController>();
+
+  late User editUser;
+
+  @override
+  void initState() {
+    editUser = widget.user.clone();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -72,25 +85,39 @@ class __EditUserInnerState extends State<_EditUserInner> {
         TextInputWidget(
           title: InputTitleEnum.userName,
           onChanged: (value) {
-            widget.user.name = value;
+            editUser.name = value;
           },
-          initialValue: widget.user.name,
+          initialValue: editUser.name,
+          autoFocus: widget.isCreateNew,
         ),
         ColorPickerWidget(
           onChanged: (value) {
             // print(value);
-            widget.user.color = value;
+            editUser.color = value;
           },
-          initialColor: widget.user.color,
+          initialColor: editUser.color,
         ),
         ElevatedButton(
-          onPressed: () {
-            settingController.upsertUser(widget.user);
+          onPressed: () async {
+            if (!validateUserInput()) return;
+            if (widget.isCreateNew) {
+              await settingController.addNewUser(editUser);
+            } else {
+              await settingController.updateUser(editUser);
+            }
             Get.back();
           },
           child: const Text('Save'),
         ),
       ],
     );
+  }
+
+  bool validateUserInput() {
+    if (editUser.name.isEmpty) {
+      Get.snackbar('❌ 错误', '用户名不能为空');
+      return false;
+    }
+    return true;
   }
 }
