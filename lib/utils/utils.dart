@@ -15,16 +15,18 @@ bool isSameDate(DateTime? a, DateTime? b) {
   return a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
-DateTime regularDateTimeToDate(DateTime dateTime) {
-  // print('from: $dateTime');
-  // print('to: ${dateTime.toUtc().copyWith(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0)}');
-  return dateTime.toUtc().copyWith(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
+DateTime keepOnlyDay(DateTime dateTime) {
+  return dateTime.copyWith(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
 }
 
 List<DateTime> daysInRange(DateTime first, DateTime last) {
   final dayCount = last.difference(first).inDays + 1;
   return List.generate(
     dayCount,
-    (index) => DateTime.utc(first.year, first.month, first.day + index),
+    (index) => keepOnlyDay(first).add(Duration(days: index)),
   );
+}
+
+DateTime utc2LocalDay(DateTime dateTime) {
+  return keepOnlyDay(dateTime.toLocal());
 }

@@ -7,11 +7,13 @@ class TextInputWidget extends StatelessWidget {
     required this.title,
     required this.onChanged,
     required this.initialValue,
+    this.autoFocus = false,
   });
   final focusNode = FocusNode();
 
   final InputTitleEnum title;
   final String initialValue;
+  final bool autoFocus;
   final void Function(String) onChanged;
 
   @override
@@ -51,6 +53,7 @@ class TextInputWidget extends StatelessWidget {
               Flexible(
                 flex: 2,
                 child: TextField(
+                  autofocus: autoFocus,
                   focusNode: focusNode,
                   controller: TextEditingController(text: initialValue),
                   decoration: InputDecoration(isDense: true, contentPadding: EdgeInsets.all(8)),
