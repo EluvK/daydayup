@@ -66,6 +66,7 @@ class CourseGroup {
   final String id;
   String name;
   String description;
+  double restAmount;
   @ListStringConverter()
   List<String> billIds = [];
 
@@ -73,6 +74,7 @@ class CourseGroup {
     required this.id,
     required this.name,
     required this.description,
+    required this.restAmount,
   });
 
   CourseGroup clone() {
@@ -80,6 +82,7 @@ class CourseGroup {
       id: id,
       name: name,
       description: description,
+      restAmount: restAmount,
     );
   }
 
@@ -91,8 +94,8 @@ class CourseGroup {
 class CourseGroupBill {
   final String id;
   final String groupId;
-  final String description;
-  final DateTime time;
+  String description;
+  DateTime time;
   double amount;
 
   CourseGroupBill({

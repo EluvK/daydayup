@@ -220,6 +220,7 @@ enum NumberInputEnum {
   courseLength,
   courseCostClassTimeUnit,
   courseGroupBillAdd,
+  courseGroupTimeUnit,
 }
 
 extension NumberInputEnumExtension on NumberInputEnum {
@@ -231,6 +232,8 @@ extension NumberInputEnumExtension on NumberInputEnum {
         return '每节课时';
       case NumberInputEnum.courseGroupBillAdd:
         return '补充课时';
+      case NumberInputEnum.courseGroupTimeUnit:
+        return '剩余课时';
     }
   }
 
@@ -242,6 +245,8 @@ extension NumberInputEnumExtension on NumberInputEnum {
         return Icons.attach_money_rounded;
       case NumberInputEnum.courseGroupBillAdd:
         return Icons.more_time_rounded;
+      case NumberInputEnum.courseGroupTimeUnit:
+        return Icons.timer_rounded;
     }
   }
 
@@ -252,6 +257,8 @@ extension NumberInputEnumExtension on NumberInputEnum {
       case NumberInputEnum.courseCostClassTimeUnit:
         return Colors.red;
       case NumberInputEnum.courseGroupBillAdd:
+        return Colors.red;
+      case NumberInputEnum.courseGroupTimeUnit:
         return Colors.red;
     }
   }

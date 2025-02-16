@@ -475,6 +475,15 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   }
 }
 
+// todo
+List<Lesson> reCalculateLessonsForTimeUnit(List<Lesson> currentLessons, Course course, ) {
+  var coursesController = Get.find<CoursesController>();
+  var courseGroupCouses = coursesController.getCourseGroupCourses(course.groupId!);
+  
+
+  return [];
+}
+
 List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course course) {
   var resultLessons = <Lesson>[];
   var nowTime = DateTime.now();

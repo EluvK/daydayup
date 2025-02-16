@@ -2,6 +2,7 @@ import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
+import 'package:daydayup/utils/view_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
@@ -42,7 +43,7 @@ class _EditCourseGroupState extends State<EditCourseGroup> {
         id: const Uuid().v4(),
         name: '',
         description: '',
-        // leftTimeUnit: 0,
+        restAmount: 0,
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),
@@ -69,14 +70,29 @@ class _EditCourseGroupInner extends StatefulWidget {
 class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
   final coursesController = Get.find<CoursesController>();
   bool shouldSaveFirst = true;
-  double billAdd = 0;
-  String billDescription = '';
-  DateTime billTime = DateTime.now();
+  late final ValueNotifier<CourseGroupBill> newBill = ValueNotifier(CourseGroupBill(
+    id: Uuid().v4(),
+    groupId: widget.courseGroup.id,
+    description: '',
+    time: DateTime.now(),
+    amount: 0,
+  ));
 
   @override
   void initState() {
     shouldSaveFirst = widget.newGroup;
+    newCourseGroupBill();
     super.initState();
+  }
+
+  void newCourseGroupBill() {
+    newBill.value = CourseGroupBill(
+      id: Uuid().v4(),
+      groupId: widget.courseGroup.id,
+      description: '',
+      time: DateTime.now(),
+      amount: 0,
+    );
   }
 
   @override
@@ -97,9 +113,14 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
           },
           initialValue: widget.courseGroup.description,
         ),
+        TextViewWidget(
+          title: NumberInputEnumWrapper(NumberInputEnum.courseGroupTimeUnit),
+          value: widget.courseGroup.restAmount.toString(),
+        ),
         SizedBox(height: 10),
         ElevatedButton(
           onPressed: () async {
+            if (!validateUserInput(saveCourse: true)) return;
             await coursesController.upsertCourseGroup(widget.courseGroup);
             shouldSaveFirst ? shouldSaveFirst = false : Get.back();
             setState(() {});
@@ -113,44 +134,36 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
               children: [
                 NumberInputWidget(
                   title: NumberInputEnum.courseGroupBillAdd,
-                  initialValue: billAdd,
+                  initialValue: newBill.value.amount,
                   onChanged: (double value) {
-                    setState(() {
-                      billAdd = value;
-                    });
+                    newBill.value.amount = value;
                   },
                 ),
                 TimePickerWidget(
                   timeTitle: TimeTitleEnum.courseGroupBillAddTime,
                   onChange: (value) {
-                    billTime = value;
+                    newBill.value.time = value;
                   },
-                  initialValue: billTime,
+                  initialValue: newBill.value.time,
                 ),
                 TextInputWidget(
                   title: InputTitleEnum.anyDescription,
                   onChanged: (value) {
-                    billDescription = value;
+                    newBill.value.description = value;
                   },
-                  initialValue: billDescription,
+                  initialValue: newBill.value.description,
                 ),
                 SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: billAdd == 0
-                      ? null
-                      : () {
-                          var bill = CourseGroupBill(
-                            id: Uuid().v4(),
-                            groupId: widget.courseGroup.id,
-                            description: billDescription,
-                            time: billTime,
-                            amount: billAdd,
-                          );
-                          coursesController.addCourseGroupBill(bill);
-                          billAdd = 0;
-                          billDescription = '';
-                          setState(() {});
-                        },
+                  onPressed: () async {
+                    if (!validateUserInput()) return;
+                    print('bill: ${newBill.value} ${newBill.value.toJson()}');
+                    await coursesController.addCourseGroupBill(newBill.value);
+                    setState(() {
+                      newCourseGroupBill();
+                      // todo refresh course group
+                    });
+                  },
                   child: const Text('补充课时'),
                 ),
               ],
@@ -169,6 +182,20 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
         )
       ],
     );
+  }
+
+  bool validateUserInput({bool saveCourse = false}) {
+    if (widget.courseGroup.name.isEmpty) {
+      Get.snackbar('❌ 错误', '请填写课程组名称');
+      return false;
+    }
+
+    if (saveCourse || shouldSaveFirst) return true;
+    if (newBill.value.amount <= 0) {
+      Get.snackbar('❌ 错误', '课时数必须大于0');
+      return false;
+    }
+    return true;
   }
 
   Widget informations() {

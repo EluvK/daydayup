@@ -33,7 +33,7 @@ class LessonTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(
-        horizontal: 12.0,
+        horizontal: 6.0,
         vertical: 4.0,
       ),
       decoration: BoxDecoration(
@@ -60,6 +60,7 @@ class LessonTile extends StatelessWidget {
             ),
             Expanded(
               child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                 onTap: null,
                 trailing: editable
                     ? IconButton(

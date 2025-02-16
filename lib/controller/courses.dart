@@ -110,6 +110,10 @@ class CoursesController extends GetxController {
 
   // --- course group bill
   Future<void> addCourseGroupBill(CourseGroupBill bill) async {
+    final CourseGroup courseGroup = getCourseGroup(bill.groupId);
+    // courseGroup.bills.add(bill);
+    courseGroup.restAmount += bill.amount;
+    await upsertCourseGroup(courseGroup);
     await DataBase().upsertCourseGroupBill(bill);
   }
 
@@ -120,6 +124,10 @@ class CoursesController extends GetxController {
   // --- course group
   CourseGroup getCourseGroup(String id) {
     return courseGroups.firstWhere((courseGroup) => courseGroup.id == id);
+  }
+
+  List<Course> getCourseGroupCourses(String groupId) {
+    return courses.where((course) => course.groupId == groupId).toList();
   }
 
   Future<void> upsertCourseGroup(CourseGroup courseGroup) async {

@@ -45,7 +45,8 @@ class DataBase {
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             description TEXT NOT NULL,
-            billIds TEXT NOT NULL
+            billIds TEXT NOT NULL,
+            restAmount REAL NOT NULL
           )
         ''');
         await db.execute('''
