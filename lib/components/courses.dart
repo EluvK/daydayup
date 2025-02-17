@@ -139,6 +139,7 @@ class _CoursesTableState extends State<CoursesTable> {
           color: course.color.withAlpha(24),
         ),
         child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
           title: Text(course.name),
           trailing: IconButton(
             icon: Icon(Icons.edit),
