@@ -96,10 +96,9 @@ class _CoursesTableState extends State<CoursesTable> {
                         childrenPadding: const EdgeInsets.only(bottom: 8),
                         title: Text(courseGroups.firstWhere((element) => element.id == e.key).name),
                         trailing: IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: Icon(Icons.more_horiz),
                           onPressed: () async {
-                            await Get.toNamed('/edit-course-group', arguments: [e.key]);
-                            setState(() {});
+                            await Get.toNamed('/view-course-group', arguments: [e.key]);
                           },
                         ),
                         children: e.value.isEmpty

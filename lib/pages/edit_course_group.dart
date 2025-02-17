@@ -47,21 +47,21 @@ class _EditCourseGroupState extends State<EditCourseGroup> {
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: _EditCourseGroupInner(courseGroup: courseGroup, newGroup: true),
+        child: _EditCourseGroupInner(courseGroup: courseGroup, isCreateNew: true),
       );
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: _EditCourseGroupInner(courseGroup: coursesController.getCourseGroup(widget.courseGroupId!).clone()),
+      child: _EditCourseGroupInner(courseGroup: coursesController.getCourseGroup(widget.courseGroupId!)),
     );
   }
 }
 
 class _EditCourseGroupInner extends StatefulWidget {
-  const _EditCourseGroupInner({required this.courseGroup, this.newGroup = false});
+  const _EditCourseGroupInner({required this.courseGroup, this.isCreateNew = false});
 
   final CourseGroup courseGroup;
-  final bool newGroup;
+  final bool isCreateNew;
 
   @override
   State<_EditCourseGroupInner> createState() => __EditCourseGroupInnerState();
@@ -69,7 +69,9 @@ class _EditCourseGroupInner extends StatefulWidget {
 
 class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
   final coursesController = Get.find<CoursesController>();
-  bool shouldSaveFirst = true;
+
+  late CourseGroup editedCourseGroup;
+
   late final ValueNotifier<CourseGroupBill> newBill = ValueNotifier(CourseGroupBill(
     id: Uuid().v4(),
     groupId: widget.courseGroup.id,
@@ -80,19 +82,8 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
 
   @override
   void initState() {
-    shouldSaveFirst = widget.newGroup;
-    newCourseGroupBill();
+    editedCourseGroup = widget.courseGroup.clone();
     super.initState();
-  }
-
-  void newCourseGroupBill() {
-    newBill.value = CourseGroupBill(
-      id: Uuid().v4(),
-      groupId: widget.courseGroup.id,
-      description: '',
-      time: DateTime.now(),
-      amount: 0,
-    );
   }
 
   @override
@@ -100,36 +91,39 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
     return ListView(
       children: [
         TextInputWidget(
-          title: InputTitleEnum.courseGroupName,
-          onChanged: (value) {
-            widget.courseGroup.name = value;
-          },
-          initialValue: widget.courseGroup.name,
-        ),
+            title: InputTitleEnum.courseGroupName,
+            onChanged: (value) {
+              editedCourseGroup.name = value;
+            },
+            initialValue: editedCourseGroup.name),
         TextInputWidget(
           title: InputTitleEnum.anyDescription,
           onChanged: (value) {
-            widget.courseGroup.description = value;
+            editedCourseGroup.description = value;
           },
-          initialValue: widget.courseGroup.description,
+          initialValue: editedCourseGroup.description,
         ),
         TextViewWidget(
           title: NumberInputEnumWrapper(NumberInputEnum.courseGroupTimeUnit),
-          value: widget.courseGroup.restAmount.toString(),
+          value: editedCourseGroup.restAmount.toString(),
         ),
         SizedBox(height: 10),
         ElevatedButton(
           onPressed: () async {
             if (!validateUserInput(saveCourse: true)) return;
-            await coursesController.upsertCourseGroup(widget.courseGroup);
-            shouldSaveFirst ? shouldSaveFirst = false : Get.back();
-            setState(() {});
+            await coursesController.upsertCourseGroup(editedCourseGroup);
+            Get.offAllNamed('/');
+            if (widget.isCreateNew) {
+              Get.toNamed('/edit-course-group', arguments: [editedCourseGroup.id]);
+            } else {
+              Get.toNamed('/view-course-group', arguments: [editedCourseGroup.id]);
+            }
           },
-          child: Text(shouldSaveFirst ? '保存课程组信息' : '更新课程组信息'),
+          child: Text(widget.isCreateNew ? '创建课程组信息' : '更新课程组信息'),
         ),
         Divider(),
         Visibility(
-            visible: shouldSaveFirst == false,
+            visible: !widget.isCreateNew,
             child: Column(
               children: [
                 NumberInputWidget(
@@ -159,82 +153,39 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
                     if (!validateUserInput()) return;
                     print('bill: ${newBill.value} ${newBill.value.toJson()}');
                     await coursesController.addCourseGroupBill(newBill.value);
-                    setState(() {
-                      newCourseGroupBill();
-                      // todo refresh course group
-                    });
+                    Get.offAllNamed('/');
+                    Get.toNamed('/view-course-group', arguments: [editedCourseGroup.id]);
                   },
                   child: const Text('补充课时'),
                 ),
+                Divider(),
               ],
             )),
-        Divider(),
-        informations(),
-        Divider(),
         // dangerZone,
-        ElevatedButton(
-          // todo make it click twice to delete
-          onPressed: () {
-            coursesController.deleteCourseGroup(widget.courseGroup.id);
-            Get.back();
-          },
-          child: const Text('删除课程组', style: TextStyle(color: Colors.red)),
-        )
+        if (!widget.isCreateNew)
+          ElevatedButton(
+            // todo make it click twice to delete
+            onPressed: () {
+              coursesController.deleteCourseGroup(editedCourseGroup.id);
+              Get.back();
+            },
+            child: const Text('删除课程组', style: TextStyle(color: Colors.red)),
+          )
       ],
     );
   }
 
   bool validateUserInput({bool saveCourse = false}) {
-    if (widget.courseGroup.name.isEmpty) {
+    if (editedCourseGroup.name.isEmpty) {
       Get.snackbar('❌ 错误', '请填写课程组名称');
       return false;
     }
 
-    if (saveCourse || shouldSaveFirst) return true;
+    if (saveCourse || widget.isCreateNew) return true;
     if (newBill.value.amount <= 0) {
       Get.snackbar('❌ 错误', '课时数必须大于0');
       return false;
     }
     return true;
-  }
-
-  Widget informations() {
-    // var courses = coursesController.courses.where((element) => element.groupId == widget.courseGroup.id).toList();
-    return Column(
-      children: [
-        _infoBills(),
-      ],
-    );
-  }
-
-  Widget _infoBills() {
-    return FutureBuilder<List<CourseGroupBill>>(
-      future: coursesController.getCourseGroupBills(widget.courseGroup.id),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        }
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-        var bills = snapshot.data!;
-        return Column(
-          children: [
-            for (var bill in bills)
-              ListTile(
-                title: Text(bill.description),
-                subtitle: Text('${bill.amount} at ${bill.time}'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    // coursesController.deleteCourseGroupBill(bill.id);
-                    setState(() {});
-                  },
-                ),
-              ),
-          ],
-        );
-      },
-    );
   }
 }

@@ -4,7 +4,6 @@ import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/day_of_week_picker.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
-import 'package:daydayup/utils/user_picker.dart';
 import 'package:daydayup/utils/view_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
