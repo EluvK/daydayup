@@ -167,7 +167,7 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
             // todo make it click twice to delete
             onPressed: () {
               coursesController.deleteCourseGroup(editedCourseGroup.id);
-              Get.back();
+              Get.offAllNamed('/');
             },
             child: const Text('删除课程组', style: TextStyle(color: Colors.red)),
           )

@@ -141,6 +141,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           onChanged: (selectedUserIds) {
             print("onChanged: $selectedUserIds");
             editCourse.user = settingController.users.firstWhere((element) => element.id == selectedUserIds.first);
+            tryCalculateExpectedLessons();
           },
           candidateUsers: settingController.users,
           initialUser: [editCourse.user],
@@ -505,6 +506,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                     setState(() {
                       editCourse.groupId = newValue;
                     });
+                    tryCalculateExpectedLessons();
                   },
                   icon: const Icon(Icons.arrow_drop_down),
                   items: items,
@@ -521,7 +523,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(List<Lesson> currentLessons, Course course) {
   var coursesController = Get.find<CoursesController>();
   final courseGroupCourses = coursesController.getCourseGroupCourses(course.groupId!);
-  var editCourses = courseGroupCourses.map((e) => e.clone()).toList();
+  final List<Course> editCourses = courseGroupCourses.map((e) => e.clone()).toList();
 
   if (editCourses.firstWhereOrNull((element) => element.id == course.id) == null) {
     editCourses.add(course.clone());
@@ -565,7 +567,7 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(List<Lesson> currentLess
   while (generateMore) {
     generateMore = false;
     for (var courseGroupCourse in editCourses) {
-      print('courseGroupCourse: ${courseGroupCourse.name}, cost: ${courseGroupCourse.pattern.value}');
+      // print('courseGroupCourse: ${courseGroupCourse.name}, cost: ${courseGroupCourse.pattern.value}');
       if (courseGroup.restAmount - generateCourseTimeUnitCost - courseGroupCourse.pattern.value < 0) {
         print(
             'cant generate ${courseGroupCourse.name} rest amount: ${courseGroup.restAmount - generateCourseTimeUnitCost}');
@@ -588,7 +590,10 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(List<Lesson> currentLess
             .add(courseGroupCourse.timeTable.duration)
             .toUtc();
         resultCourseLessons[courseGroupCourse]!.add(Lesson(
-          id: currentLessons.firstWhereOrNull((element) => element.startTime == startTime)?.id ?? const Uuid().v4(),
+          id: currentCourseLessons[courseGroupCourse]!
+                  .firstWhereOrNull((element) => element.startTime == startTime)
+                  ?.id ??
+              const Uuid().v4(),
           name: "${courseGroupCourse.name} @ ${resultCourseLessons[courseGroupCourse]!.length + 1}",
           user: courseGroupCourse.user,
           courseId: courseGroupCourse.id,
