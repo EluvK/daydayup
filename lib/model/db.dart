@@ -92,6 +92,15 @@ class DataBase {
     });
   }
 
+  Future<void> deleteCourseGroupBill(String id) async {
+    final db = await getDb();
+    await db.delete(
+      'course_group_bill',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   // course group
   Future<void> upsertCourseGroup(CourseGroup courseGroup) async {
     final db = await getDb();

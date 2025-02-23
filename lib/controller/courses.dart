@@ -43,12 +43,13 @@ class CoursesController extends GetxController {
   Future<void> delayInitTasks() async {
     Future<void> finishPassingLessons() async {
       final settingController = Get.find<SettingController>();
-      var lastUpdateLessonStatusTime = settingController.lastUpdateLessonStatusTime;
+      var lastUpdateLessonStatusTime = settingController.lastUpdateLessonStatusTime.subtract(Duration(days: 1));
       final now = DateTime.now();
       var count = 0;
       var lessonSummaries = '';
       print('eachDateLessons length: ${eachDateLessons.length}');
       final sortedKeys = eachDateLessons.keys.toList()..sort();
+      Map<String, double> courseGroupCosts = {}; // {courseGroupId, cost}
       for (final key in sortedKeys) {
         // print('date: $key');
 
@@ -62,6 +63,13 @@ class CoursesController extends GetxController {
           if (lesson.status == LessonStatus.notStarted && lesson.endTime.isBefore(now)) {
             lesson.status = LessonStatus.finished;
             await DataBase().updateLesson(lesson);
+            final Course course = getCourse(lesson.courseId);
+            if (course.pattern.type == PatternType.costClassTimeUnit && course.groupId != null) {
+              if (courseGroupCosts[course.groupId!] == null) {
+                courseGroupCosts[course.groupId!] = 0;
+              }
+              courseGroupCosts[course.groupId!] = courseGroupCosts[course.groupId!]! + course.pattern.value;
+            }
             // print('update lesson status from notStarted to finished: at ${lesson.startTime} ${lesson.name}');
             lessonSummaries += lessonSummaries.isNotEmpty ? '\n' : '';
             lessonSummaries += '- ${DateFormat.yMd().format(lesson.startTime.toLocal())}: ${lesson.name}';
@@ -73,10 +81,17 @@ class CoursesController extends GetxController {
           break;
         }
       }
+      for (final entry in courseGroupCosts.entries) {
+        final courseGroup = getCourseGroup(entry.key);
+        courseGroup.restAmount -= entry.value;
+        await upsertCourseGroup(courseGroup);
+        lessonSummaries += '\n- ${courseGroup.name} 扣除课时: ${entry.value}';
+      }
       if (count > 0) {
         Get.snackbar('已自动将 $count 节课堂标记为完成:', lessonSummaries);
       }
       print('update $count lessons status from notStarted to finished');
+      print(lessonSummaries);
       // rebuild status.
       for (final course in courses) {
         courseLessons[course.id] = await DataBase().getLessons(course.id);
@@ -121,6 +136,17 @@ class CoursesController extends GetxController {
     return await DataBase().getCourseGroupBills(groupId);
   }
 
+  Future<void> deleteCourseGroupBill(String billId) async {
+    await DataBase().deleteCourseGroupBill(billId);
+  }
+
+  Future<void> deleteCourseGroupBills(String groupId) async {
+    final bills = await getCourseGroupBills(groupId);
+    for (final bill in bills) {
+      await deleteCourseGroupBill(bill.id);
+    }
+  }
+
   // --- course group
   CourseGroup getCourseGroup(String id) {
     return courseGroups.firstWhere((courseGroup) => courseGroup.id == id);
@@ -142,8 +168,12 @@ class CoursesController extends GetxController {
   }
 
   Future<void> deleteCourseGroup(String id) async {
+    final ids = courses.where((course) => course.groupId == id).map((e) => e.id).toList();
+    for (final courseId in ids) {
+      await deleteCourse(courseId);
+    }
+    await deleteCourseGroupBills(id);
     await DataBase().deleteCourseGroup(id);
-    // todo remove course group bills and courses in this group.
     courseGroups.removeWhere((element) => element.id == id);
   }
 

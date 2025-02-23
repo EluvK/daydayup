@@ -165,8 +165,8 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
         if (!widget.isCreateNew)
           ElevatedButton(
             // todo make it click twice to delete
-            onPressed: () {
-              coursesController.deleteCourseGroup(editedCourseGroup.id);
+            onPressed: () async {
+              await coursesController.deleteCourseGroup(editedCourseGroup.id);
               Get.offAllNamed('/');
             },
             child: const Text('删除课程组', style: TextStyle(color: Colors.red)),
