@@ -1,7 +1,10 @@
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/day_of_week_picker.dart';
+import 'package:daydayup/utils/user_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class Courses extends StatelessWidget {
   const Courses({super.key});
@@ -40,7 +43,6 @@ class Courses extends StatelessWidget {
       body: CoursesTable(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add your onPressed code here!
           Get.toNamed('/edit-course');
         },
         backgroundColor: Colors.green,
@@ -105,7 +107,7 @@ class _CoursesTableState extends State<CoursesTable> {
                             ? [
                                 Text('...'),
                               ]
-                            : e.value.map((e) => _buildCourseTile(e)).toList(),
+                            : e.value.map((e) => CourseTile(course: e, editable: false)).toList(),
                       ),
                     )
                     .toList(),
@@ -117,7 +119,7 @@ class _CoursesTableState extends State<CoursesTable> {
                       itemCount: noGroupCourses.length,
                       itemBuilder: (context, index) {
                         var course = noGroupCourses[index];
-                        return _buildCourseTile(course);
+                        return CourseTile(course: course, editable: false);
                       },
                     )
                   ],
@@ -128,31 +130,65 @@ class _CoursesTableState extends State<CoursesTable> {
       ],
     );
   }
+}
 
-  Widget _buildCourseTile(Course course) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: course.color.withAlpha(48), width: 2),
-          borderRadius: BorderRadius.circular(16),
-          color: course.color.withAlpha(24),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-          title: Text(course.name),
-          trailing: IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () async {
-              await Get.toNamed('/edit-course', arguments: [course.id]);
-              setState(() {});
-            },
-          ),
-          subtitle: Text("${course.timeTable.startDate.toString()} (${course.description})"),
-          textColor: course.color,
-          onTap: () {
-            Get.toNamed('/view-course', arguments: [course.id]);
-          },
+class CourseTile extends StatelessWidget {
+  const CourseTile({
+    super.key,
+    required this.course,
+    this.editable = true,
+    this.showUser = true,
+  });
+
+  final Course course;
+  final bool editable;
+  final bool showUser;
+
+  @override
+  Widget build(BuildContext context) {
+    // todo add day of week status
+    var daysOfWeek = concatSelectedDays(course.timeTable.daysOfWeek);
+    var time =
+        "${DateFormat.Hm().format(course.timeTable.startDate.toLocal())}-${DateFormat.Hm().format(course.timeTable.startDate.toLocal().add(course.timeTable.duration))}";
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+      decoration: BoxDecoration(
+        color: course.color.withAlpha(24),
+        border: Border.all(width: 0.5),
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: InkWell(
+        onTap: () {
+          Get.toNamed('/view-course', arguments: [course.id]);
+        },
+        child: Row(
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(minWidth: 60),
+              child: Column(
+                children: [
+                  if (showUser) UserAvatar(user: course.user, isSelected: false),
+                  SizedBox(height: 4),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                onTap: null,
+                trailing: editable
+                    ? IconButton(
+                        onPressed: () async {
+                          await Get.toNamed('/edit-course', arguments: [course.id]);
+                        },
+                        icon: Icon(Icons.edit),
+                      )
+                    : null,
+                title: Text(course.name),
+                subtitle: Text("$daysOfWeek, $time"),
+              ),
+            )
+          ],
         ),
       ),
     );

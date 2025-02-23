@@ -32,10 +32,7 @@ class LessonTile extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 6.0,
-        vertical: 4.0,
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
       decoration: BoxDecoration(
         color: course.color.withAlpha(24),
         border: Border.all(width: 0.5),
