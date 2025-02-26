@@ -318,7 +318,7 @@ extension LessonStatusExtension on LessonStatus {
       case LessonStatus.finished:
         return Colors.green;
       case LessonStatus.canceled:
-        return Colors.red;
+        return Colors.blue;
       case LessonStatus.notAttended:
         return Colors.red;
     }

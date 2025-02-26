@@ -192,7 +192,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseFirstDayTime,
           onChange: (date) {
-            editCourse.timeTable.startDate = date;
+            editCourse.timeTable.startDate = date.toLocal();
             setState(() {
               updateDayOfWeek(date);
             });
@@ -203,7 +203,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         TimePickerWidget(
           timeTitle: TimeTitleEnum.courseStartTime,
           onChange: (date) {
-            editCourse.timeTable.lessonStartTime = date;
+            editCourse.timeTable.lessonStartTime = date.toLocal();
             // recalculate course end time
             setState(() {});
             tryCalculateExpectedLessons();
@@ -225,7 +225,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           onChange: (date) {
             print('set end time: $date');
             // recalculate course length
-            editCourse.timeTable.duration = date.difference(editCourse.timeTable.lessonStartTime);
+            editCourse.timeTable.duration = date.toLocal().difference(editCourse.timeTable.lessonStartTime);
             print('course length: ${editCourse.timeTable.duration}');
             setState(() {});
             tryCalculateExpectedLessons();
@@ -255,7 +255,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                   await coursesController.upsertCourse(editCourse, newLessons);
                   break;
                 case PatternType.costClassTimeUnit:
-                  Map<Course, List<Lesson>> allNewLessons = reCalculateLessonsForTimeUnit(currentLessons, editCourse);
+                  Map<Course, List<Lesson>> allNewLessons = reCalculateLessonsForTimeUnit(editCourse);
                   for (var course in allNewLessons.keys) {
                     await coursesController.upsertCourse(course, allNewLessons[course]!);
                   }
@@ -271,7 +271,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
         // todo view course status
 
-        // 新课程预览
+        // 新课程预览 - 单课模式
         if (widget.isCreateNew && editCourse.pattern.type == PatternType.eachSingleLesson)
           DynamicLessonList(
             title: "课堂列表预览",
@@ -280,37 +280,56 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             titleColor: Colors.red[300],
             editable: false,
           ),
+        // 新课程预览 - 课程组模式 - self
         if (widget.isCreateNew && editCourse.pattern.type == PatternType.costClassTimeUnit)
-          for (var entry in createNewViewLessonsMap.entries)
+          for (var entry in createNewViewLessonsMap.entries.where((entry) => entry.key.name == editCourse.name))
             DynamicLessonList(
-              title: "课堂列表预览 ${entry.key.name}",
+              title: "该课堂预览 ${entry.key.name}",
+              course: entry.key,
+              lessons: entry.value,
+              titleColor: Colors.red[300],
+              editable: false,
+            ),
+        // 新课程预览 - 课程组模式 - others
+        if (widget.isCreateNew && editCourse.pattern.type == PatternType.costClassTimeUnit)
+          for (var entry in createNewViewLessonsMap.entries.where((entry) => entry.key.name != editCourse.name))
+            DynamicLessonList(
+              title: "组内其它课堂预览 ${entry.key.name}",
               course: entry.key,
               lessons: entry.value,
               titleColor: Colors.red[300],
               editable: false,
             ),
 
-        // 修改课程安排预览
-        if (viewCurrentFutureLessons.value && editCourse.pattern.type == PatternType.eachSingleLesson)
+        // 修改前课程安排预览（修改后不再可见）
+        if (viewCurrentFutureLessons.value)
           DynamicLessonList(
-            title: "当下课堂列表",
+            title: "该课堂排课",
             course: editCourse,
             lessons: notStartedLessons,
           ),
 
         if (viewExpectedFutureLessons.value && editCourse.pattern.type == PatternType.eachSingleLesson)
           DynamicLessonList(
-            title: "修改后课堂列表",
+            title: "修改后该课堂排课",
             course: editCourse,
-            lessons: expectedLessons,
+            lessons: expectedLessons.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
             titleColor: Colors.red[300],
           ),
         if (viewExpectedFutureLessons.value && editCourse.pattern.type == PatternType.costClassTimeUnit)
-          for (var entry in expectedLessonsMap.entries)
+          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name == editCourse.name))
             DynamicLessonList(
-              title: "修改后课堂列表",
+              title: "修改后该课堂排课 ${entry.key.name}",
               course: entry.key,
-              lessons: entry.value,
+              lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
+              titleColor: Colors.red[300],
+            ),
+        if (viewExpectedFutureLessons.value && editCourse.pattern.type == PatternType.costClassTimeUnit)
+          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name != editCourse.name))
+            DynamicLessonList(
+              title: "修改后其它课堂排课 ${entry.key.name}",
+              course: entry.key,
+              lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
               titleColor: Colors.red[300],
             ),
 
@@ -338,7 +357,8 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           createNewViewLessons.value = reCalculateLessonsForEachSingle(currentLessons, editCourse);
           break;
         case PatternType.costClassTimeUnit:
-          createNewViewLessonsMap.value = reCalculateLessonsForTimeUnit(currentLessons, editCourse);
+          createNewViewLessonsMap.value = reCalculateLessonsForTimeUnit(editCourse);
+
           break;
       }
       setState(() {
@@ -352,7 +372,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         expectedLessons.value = reCalculateLessonsForEachSingle(currentLessons, editCourse);
         break;
       case PatternType.costClassTimeUnit:
-        expectedLessonsMap.value = reCalculateLessonsForTimeUnit(currentLessons, editCourse);
+        expectedLessonsMap.value = reCalculateLessonsForTimeUnit(editCourse);
         break;
     }
     setState(() {
@@ -520,7 +540,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   }
 }
 
-Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(List<Lesson> currentLessons, Course course) {
+Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course) {
   var coursesController = Get.find<CoursesController>();
   final courseGroupCourses = coursesController.getCourseGroupCourses(course.groupId!);
   final List<Course> editCourses = courseGroupCourses.map((e) => e.clone()).toList();
@@ -546,62 +566,94 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(List<Lesson> currentLess
   }
 
   // return result
-  var resultCourseLessons = <Course, List<Lesson>>{};
+  Map<Course, List<Lesson>> resultCourseLessons = {};
+  Map<Course, int> courseCompletedCount = {};
   for (var courseGroupCourse in editCourses) {
     resultCourseLessons[courseGroupCourse] = [];
+    courseCompletedCount[courseGroupCourse] = 0;
   }
 
   // the past shall not be modified by this function
   for (var eachCourse in editCourses) {
     for (var lesson in currentCourseLessons[eachCourse]!) {
-      if (lesson.status != LessonStatus.notStarted && lesson.endTime.isBefore(nowTime)) {
+      if (lesson.status != LessonStatus.notStarted || lesson.endTime.isBefore(nowTime)) {
         resultCourseLessons[eachCourse]!.add(lesson);
+        print("add lesson ${lesson.name}, status ${lesson.status}, endTime: ${lesson.endTime}");
+      }
+      if (lesson.status == LessonStatus.finished || lesson.status == LessonStatus.notAttended) {
+        courseCompletedCount[eachCourse] = courseCompletedCount[eachCourse]! + 1;
       }
     }
   }
 
   double generateCourseTimeUnitCost = 0;
   bool generateMore = true;
-  DateTime courseDate = nowTime.toLocal();
+  DateTime courseDate = nowTime.toUtc();
+  for (var eachCourse in editCourses) {
+    if (resultCourseLessons[eachCourse]!.isEmpty) {
+      courseDate = eachCourse.timeTable.startDate.isBefore(courseDate) ? eachCourse.timeTable.startDate : courseDate;
+    }
+  }
+  courseDate = courseDate.toLocal();
   print('reCal start from: $courseDate');
   while (generateMore) {
+    print('try generate for day: $courseDate');
+    print('current unit : $generateCourseTimeUnitCost, ${courseGroup.restAmount - generateCourseTimeUnitCost}');
+    if (courseGroup.restAmount <= generateCourseTimeUnitCost) {
+      break;
+    }
     generateMore = false;
-    for (var courseGroupCourse in editCourses) {
+    for (var eachCourse in editCourses) {
       // print('courseGroupCourse: ${courseGroupCourse.name}, cost: ${courseGroupCourse.pattern.value}');
-      if (courseGroup.restAmount - generateCourseTimeUnitCost - courseGroupCourse.pattern.value < 0) {
-        print(
-            'cant generate ${courseGroupCourse.name} rest amount: ${courseGroup.restAmount - generateCourseTimeUnitCost}');
+      if (courseGroup.restAmount - generateCourseTimeUnitCost < eachCourse.pattern.value) {
+        print('cant generate ${eachCourse.name} rest amount: ${courseGroup.restAmount - generateCourseTimeUnitCost}');
         continue;
       }
       generateMore = true;
     }
-    for (var courseGroupCourse in editCourses) {
-      if (courseGroupCourse.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate)) &&
-          courseGroupCourse.timeTable.startDate.isBefore(courseDate)) {
-        var startTime = courseDate
-            .copyWith(
-                hour: courseGroupCourse.timeTable.lessonStartTime.toLocal().hour,
-                minute: courseGroupCourse.timeTable.lessonStartTime.toLocal().minute)
+    for (var eachCourse in editCourses) {
+      print(
+          'each Course: ${eachCourse.name}, startDate: ${eachCourse.timeTable.startDate} | ${eachCourse.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))} | ${!eachCourse.timeTable.startDate.isAfter(courseDate)}');
+      if (eachCourse.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate)) &&
+          !eachCourse.timeTable.startDate.isAfter(courseDate)) {
+        var startTime = eachCourse.timeTable.lessonStartTime
+            .toLocal()
+            .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
             .toUtc();
-        var endTime = courseDate
-            .copyWith(
-                hour: courseGroupCourse.timeTable.lessonStartTime.toLocal().hour,
-                minute: courseGroupCourse.timeTable.lessonStartTime.toLocal().minute)
-            .add(courseGroupCourse.timeTable.duration)
+        var endTime = eachCourse.timeTable.lessonStartTime
+            .toLocal()
+            .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
+            .add(eachCourse.timeTable.duration)
             .toUtc();
-        resultCourseLessons[courseGroupCourse]!.add(Lesson(
-          id: currentCourseLessons[courseGroupCourse]!
-                  .firstWhereOrNull((element) => element.startTime == startTime)
-                  ?.id ??
-              const Uuid().v4(),
-          name: "${courseGroupCourse.name} @ ${resultCourseLessons[courseGroupCourse]!.length + 1}",
-          user: courseGroupCourse.user,
-          courseId: courseGroupCourse.id,
-          startTime: startTime,
-          endTime: endTime,
-          status: endTime.isBefore(nowTime) ? LessonStatus.finished : LessonStatus.notStarted,
-        ));
-        generateCourseTimeUnitCost += courseGroupCourse.pattern.value;
+        print("endTime: $endTime");
+        if (resultCourseLessons[eachCourse]!.isNotEmpty &&
+            resultCourseLessons[eachCourse]!.last.endTime.isAfter(endTime)) {
+          // skip duplicate generate course
+          continue;
+        }
+        Lesson? ifExistLesson =
+            resultCourseLessons[eachCourse]!.firstWhereOrNull((element) => element.endTime == endTime);
+        if (ifExistLesson != null) {
+          print('skip exist lesson ${ifExistLesson.name} at endTime $endTime');
+        } else {
+          final name = "${eachCourse.name} @ ${courseCompletedCount[eachCourse]! + 1}";
+          final status = endTime.isBefore(nowTime) ? LessonStatus.finished : LessonStatus.notStarted;
+          resultCourseLessons[eachCourse]!.add(Lesson(
+            id: currentCourseLessons[eachCourse]!.firstWhereOrNull((element) => element.startTime == startTime)?.id ??
+                const Uuid().v4(),
+            name: name,
+            user: eachCourse.user,
+            courseId: eachCourse.id,
+            startTime: startTime,
+            endTime: endTime,
+            status: status,
+          ));
+          print("generate course $name end at $endTime status: $status");
+          courseCompletedCount[eachCourse] = courseCompletedCount[eachCourse]! + 1;
+          if (endTime.isAfter(nowTime)) {
+            generateCourseTimeUnitCost += eachCourse.pattern.value;
+          }
+        }
       }
     }
     courseDate = courseDate.add(const Duration(days: 1));
@@ -618,41 +670,42 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
   currentLessons.sort((a, b) => a.startTime.compareTo(b.startTime));
   for (var lesson in currentLessons) {
     // the past shall not be modified by this function
-    if (lesson.status != LessonStatus.notStarted && lesson.endTime.isBefore(nowTime)) {
+    if (lesson.status != LessonStatus.notStarted || lesson.endTime.isBefore(nowTime)) {
       resultLessons.add(lesson);
     }
-    if (lesson.status != LessonStatus.notStarted && lesson.status != LessonStatus.canceled) {
+    if (lesson.status == LessonStatus.finished || lesson.status == LessonStatus.notAttended) {
       completedCount++;
     }
   }
-  var futureCount = course.pattern.value.toInt() - completedCount;
 
-  int generateCount = 0;
   DateTime courseDate = (resultLessons.isEmpty ? course.timeTable.startDate : nowTime).toLocal();
   print('reCal start from: $courseDate');
-  while (generateCount < futureCount) {
+  while (completedCount < course.pattern.value.toInt()) {
     if (course.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))) {
-      var startTime = courseDate
-          .copyWith(
-              hour: course.timeTable.lessonStartTime.toLocal().hour,
-              minute: course.timeTable.lessonStartTime.toLocal().minute)
+      var startTime = course.timeTable.lessonStartTime
+          .toLocal()
+          .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
           .toUtc();
-      var endTime = courseDate
-          .copyWith(
-              hour: course.timeTable.lessonStartTime.toLocal().hour,
-              minute: course.timeTable.lessonStartTime.toLocal().minute)
+      var endTime = course.timeTable.lessonStartTime
+          .toLocal()
+          .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
           .add(course.timeTable.duration)
           .toUtc();
-      resultLessons.add(Lesson(
-        id: currentLessons.firstWhereOrNull((element) => element.startTime == startTime)?.id ?? const Uuid().v4(),
-        name: "${course.name} @ ${resultLessons.length + 1}",
-        user: course.user,
-        courseId: course.id,
-        startTime: startTime,
-        endTime: endTime,
-        status: endTime.isBefore(nowTime) ? LessonStatus.finished : LessonStatus.notStarted,
-      ));
-      generateCount++;
+      Lesson? ifExistLesson = resultLessons.firstWhereOrNull((element) => element.endTime == endTime);
+      if (ifExistLesson != null) {
+        print('skip exist lesson ${ifExistLesson.name} at endTime $endTime');
+      } else {
+        resultLessons.add(Lesson(
+          id: currentLessons.firstWhereOrNull((element) => element.startTime == startTime)?.id ?? const Uuid().v4(),
+          name: "${course.name} @ ${completedCount + 1}",
+          user: course.user,
+          courseId: course.id,
+          startTime: startTime,
+          endTime: endTime,
+          status: endTime.isBefore(nowTime) ? LessonStatus.finished : LessonStatus.notStarted,
+        ));
+        completedCount++;
+      }
     }
     courseDate = courseDate.add(const Duration(days: 1));
   }
