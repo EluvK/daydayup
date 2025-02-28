@@ -101,7 +101,7 @@ class DynamicLessonList extends StatefulWidget {
     required this.course,
     required this.lessons,
     this.titleColor,
-    this.editable = true,
+    this.editable = false,
   });
 
   final String title;

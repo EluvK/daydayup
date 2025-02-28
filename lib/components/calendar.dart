@@ -195,6 +195,10 @@ class _CalendarTableState extends State<CalendarTable> {
             // return day.day == 20;
             return false;
           },
+          daysOfWeekStyle: DaysOfWeekStyle(
+            weekdayStyle: const TextStyle(color: Color(0xFF2F2F2F)),
+            // weekendStyle: const TextStyle(color: Color(0xFF6A6A6A)),
+          ),
           onDaySelected: _onDaySelected,
           onRangeSelected: _onRangeSelected,
           onCalendarCreated: (controller) => _pageController = controller,

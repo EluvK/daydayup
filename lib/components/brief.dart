@@ -112,11 +112,11 @@ DateTime _todayDate() {
 }
 
 DateTime _thisWeekBeginDate() {
-  return keepOnlyDay(DateTime.now().subtract(Duration(days: DateTime.now().weekday)));
+  return keepOnlyDay(DateTime.now()).subtract(Duration(days: DateTime.now().weekday - 1));
 }
 
 DateTime _thisWeekEndDate() {
-  return keepOnlyDay(DateTime.now().add(Duration(days: DateTime.daysPerWeek - DateTime.now().weekday)));
+  return keepOnlyDay(DateTime.now()).add(Duration(days: DateTime.daysPerWeek - DateTime.now().weekday));
 }
 
 String _today() {
