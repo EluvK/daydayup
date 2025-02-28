@@ -3,7 +3,9 @@ import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/color_picker.dart';
+import 'package:daydayup/utils/dangerous_zone.dart';
 import 'package:daydayup/utils/day_of_week_picker.dart';
+import 'package:daydayup/utils/double_click.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
 import 'package:daydayup/utils/user_picker.dart';
@@ -335,16 +337,20 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
         Divider(),
 
-        // dangerZone,
         if (!widget.isCreateNew)
-          ElevatedButton(
-            // todo make it click twice to delete
-            onPressed: () {
-              coursesController.deleteCourse(editCourse.id);
-              Get.offAllNamed('/');
-            },
-            child: const Text('删除课程', style: TextStyle(color: Colors.red)),
-          ),
+          DangerousZone(children: [
+            DoubleClickButton(
+              buttonBuilder: (onPressed) => ElevatedButton(
+                onPressed: onPressed,
+                child: const Text('删除课程', style: TextStyle(color: Colors.red)),
+              ),
+              onDoubleClick: () async {
+                await coursesController.deleteCourse(editCourse.id);
+                Get.offAllNamed('/');
+              },
+              firstClickHint: "删除课程",
+            ),
+          ]),
       ],
     );
   }

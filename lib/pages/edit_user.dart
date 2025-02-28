@@ -1,5 +1,6 @@
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/dangerous_zone.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/color_picker.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ class EditUserPage extends StatelessWidget {
     print("userId: $userId");
     return Scaffold(
       appBar: AppBar(
-        title: Text(userId == null ? 'New User' : 'Edit User'),
+        title: Text(userId == null ? '创建用户' : '编辑用户'),
       ),
       body: EditUser(userId: userId),
     );
@@ -109,6 +110,16 @@ class __EditUserInnerState extends State<_EditUserInner> {
           },
           child: const Text('Save'),
         ),
+        if (!widget.isCreateNew)
+          DangerousZone(
+            children: [
+              ElevatedButton.icon(
+                onPressed: null,
+                icon: const Icon(Icons.delete_forever),
+                label: const Text("删除用户"),
+              ),
+            ],
+          )
       ],
     );
   }

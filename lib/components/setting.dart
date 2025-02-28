@@ -2,6 +2,7 @@ import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class Setting extends StatelessWidget {
   const Setting({super.key});
@@ -89,7 +90,7 @@ class _UserSettingState extends State<UserSetting> {
       },
       child: ListTile(
         leading: Icon(Icons.add),
-        title: Text('Add User'),
+        title: Text('创建用户'),
       ),
     );
   }
@@ -123,12 +124,20 @@ class _AppSettingState extends State<AppSetting> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('// 测试按钮'),
-        ElevatedButton(
-          onPressed: () {
-            settingController.setLastUpdateLessonStatusTime(DateTime(1999));
-          },
-          child: Text('重置自动更新时间'),
+        Text('// 调试功能'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("检查截至日期"),
+            TextButton(
+              onLongPress: () {
+                settingController.setLastUpdateLessonStatusTime(DateTime(1970));
+                setState(() {});
+              },
+              onPressed: null,
+              child: Text(DateFormat.yMMMd().format(settingController.getLastUpdateLessonStatusTime().toLocal())),
+            )
+          ],
         ),
       ],
     );

@@ -91,6 +91,18 @@ class _CoursesTableState extends State<CoursesTable> {
 
             return ListView(
               children: [
+                [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "课程组课程",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
                 groupCourses.entries
                     .map(
                       (MapEntry<String, List<Course>> e) => ExpansionTile(
@@ -113,7 +125,16 @@ class _CoursesTableState extends State<CoursesTable> {
                     .toList(),
                 if (noGroupCourses.isNotEmpty)
                   [
-                    // Divider(),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          "其它课程",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
                     ListView.builder(
                       shrinkWrap: true,
                       itemCount: noGroupCourses.length,
