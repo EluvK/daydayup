@@ -99,7 +99,16 @@ class SettingController extends GetxController {
     users[users.indexWhere((u) => u.id == user.id)] = user;
     await DataBase().upsertUser(user);
     // update everywhere user is used
-    updateAnyUserInfos(user);
+
+    final coursesController = Get.find<CoursesController>();
+    coursesController.updateAnyUserInfos(user);
+  }
+
+  Future<void> deleteUser(User user) async {
+    final coursesController = Get.find<CoursesController>();
+    await coursesController.switchAllUser(user, users.firstWhere((u) => u.id == 'default'));
+    users.removeWhere((u) => u.id == user.id);
+    await DataBase().deleteUser(user.id);
   }
 
   int getMainPageAtStartup() {
@@ -127,10 +136,5 @@ class SettingController extends GetxController {
     time = time.toUtc();
     lastUpdateLessonStatusTime = time;
     box.write('lastUpdateLessonStatusTime', time.toString());
-  }
-
-  Future<void> updateAnyUserInfos(User user) async {
-    final coursesController = Get.find<CoursesController>();
-    coursesController.updateAnyUserInfos(user);
   }
 }

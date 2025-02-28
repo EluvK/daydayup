@@ -53,6 +53,7 @@ class _EditCourseState extends State<EditCourse> {
         description: '',
         timeTable: CourseTimeTable(
           startDate: DateTime.now(),
+          weekType: WeekType.weekly,
           daysOfWeek: [],
           lessonStartTime: DateTime.now(),
           duration: Duration(hours: 2),
@@ -88,8 +89,6 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
   late Course editCourse;
 
-  final RxList<String> dynamicDayOfWeek = <String>[].obs;
-
   late final List<Lesson> currentLessons = coursesController.getCourseLessons(widget.course.id);
   late final List<Lesson> notStartedLessons =
       currentLessons.where((element) => element.status == LessonStatus.notStarted).toList();
@@ -108,8 +107,6 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
     editCourse = widget.course.clone();
     if (widget.isCreateNew) {
       updateDayOfWeek(editCourse.timeTable.startDate);
-    } else {
-      dynamicDayOfWeek.value = editCourse.timeTable.daysOfWeek;
     }
     super.initState();
   }
@@ -180,6 +177,10 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                     setState(() {});
                     // tryCalculateExpectedLessons(); // todo uncomment this line
                   },
+                  style: const ButtonStyle(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity(horizontal: -3, vertical: -2),
+                  ),
                 ),
               ],
             )),
@@ -235,9 +236,11 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           initialValue: editCourse.timeTable.lessonStartTime.add(editCourse.timeTable.duration),
         ),
         DayOfWeekPickerWidget(
-          initialSelectedDays: dynamicDayOfWeek,
-          onChanged: (days) {
+          initialWeekType: editCourse.timeTable.weekType,
+          initialSelectedDays: editCourse.timeTable.daysOfWeek,
+          onChanged: (type, days) {
             print('day of week: $days');
+            editCourse.timeTable.weekType = type;
             editCourse.timeTable.daysOfWeek = days;
             // recalculate course day of week
             tryCalculateExpectedLessons();
@@ -339,6 +342,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
 
         if (!widget.isCreateNew)
           DangerousZone(children: [
+            Text("    删除课程将同时删除课程下的所有课堂记录。\n"),
             DoubleClickButton(
               buttonBuilder: (onPressed) => ElevatedButton(
                 onPressed: onPressed,
@@ -390,8 +394,10 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   void updateDayOfWeek(DateTime date) {
     var dayOfWeek = getDayOfWeek(date);
     print('day of week: $dayOfWeek');
-    dynamicDayOfWeek.value = [dayOfWeek];
-    editCourse.timeTable.daysOfWeek = [dayOfWeek];
+    if (editCourse.timeTable.daysOfWeek.contains(dayOfWeek)) {
+      return;
+    }
+    editCourse.timeTable.daysOfWeek.add(dayOfWeek);
   }
 
   bool validateUserInput({bool showError = false}) {
@@ -620,7 +626,12 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course) {
     for (var eachCourse in editCourses) {
       print(
           'each Course: ${eachCourse.name}, startDate: ${eachCourse.timeTable.startDate} | ${eachCourse.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))} | ${!eachCourse.timeTable.startDate.isAfter(courseDate)}');
-      if (eachCourse.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate)) &&
+      if (matchCourseTimeType(
+            course.timeTable.startDate,
+            courseDate,
+            course.timeTable.weekType,
+            course.timeTable.daysOfWeek,
+          ) &&
           !eachCourse.timeTable.startDate.isAfter(courseDate)) {
         var startTime = eachCourse.timeTable.lessonStartTime
             .toLocal()
@@ -687,7 +698,12 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
   DateTime courseDate = (resultLessons.isEmpty ? course.timeTable.startDate : nowTime).toLocal();
   print('reCal start from: $courseDate');
   while (completedCount < course.pattern.value.toInt()) {
-    if (course.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))) {
+    if (matchCourseTimeType(
+      course.timeTable.startDate,
+      courseDate,
+      course.timeTable.weekType,
+      course.timeTable.daysOfWeek,
+    )) {
       var startTime = course.timeTable.lessonStartTime
           .toLocal()
           .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
@@ -717,4 +733,19 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
   }
 
   return resultLessons;
+}
+
+bool matchCourseTimeType(DateTime startDate, DateTime targetDate, WeekType weekType, List<String> daysOfWeek) {
+  if (!daysOfWeek.contains(getDayOfWeek(targetDate))) {
+    return false;
+  }
+  if (weekType == WeekType.weekly) {
+    return true;
+  }
+  if (weekType == WeekType.biWeekly) {
+    var diff = targetDate.difference(startDate).inDays;
+    return (diff + 14) % 14 < 7;
+  }
+
+  return false;
 }

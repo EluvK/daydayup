@@ -207,12 +207,14 @@ class Lesson {
 @JsonSerializable()
 class CourseTimeTable {
   DateTime startDate;
+  WeekType weekType;
   List<String> daysOfWeek;
   DateTime lessonStartTime;
   Duration duration;
 
   CourseTimeTable({
     required this.startDate,
+    required this.weekType,
     required this.daysOfWeek,
     required this.lessonStartTime,
     required this.duration,
@@ -221,6 +223,7 @@ class CourseTimeTable {
   CourseTimeTable clone() {
     return CourseTimeTable(
       startDate: startDate,
+      weekType: weekType,
       daysOfWeek: List<String>.from(daysOfWeek),
       lessonStartTime: lessonStartTime,
       duration: duration,
@@ -295,6 +298,14 @@ enum PatternType {
   eachSingleLesson,
   @JsonValue(200)
   costClassTimeUnit,
+}
+
+@JsonEnum()
+enum WeekType {
+  @JsonValue(7)
+  weekly,
+  @JsonValue(14)
+  biWeekly,
 }
 
 extension LessonStatusExtension on LessonStatus {

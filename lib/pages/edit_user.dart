@@ -1,6 +1,7 @@
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/dangerous_zone.dart';
+import 'package:daydayup/utils/double_click.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/color_picker.dart';
 import 'package:flutter/material.dart';
@@ -110,13 +111,20 @@ class __EditUserInnerState extends State<_EditUserInner> {
           },
           child: const Text('Save'),
         ),
-        if (!widget.isCreateNew)
+        if (!widget.isCreateNew && widget.user.id != "default")
           DangerousZone(
             children: [
-              ElevatedButton.icon(
-                onPressed: null,
-                icon: const Icon(Icons.delete_forever),
-                label: const Text("删除用户"),
+              Text("    删除用户会使得关联的课程组和课堂信息被更改为默认用户。\n    请谨慎操作。"),
+              DoubleClickButton(
+                buttonBuilder: (onPressed) => ElevatedButton(
+                  onPressed: onPressed,
+                  child: const Text('删除用户', style: TextStyle(color: Colors.red)),
+                ),
+                onDoubleClick: () async {
+                  await settingController.deleteUser(editUser);
+                  Get.offAllNamed('/');
+                },
+                firstClickHint: "删除用户",
               ),
             ],
           )

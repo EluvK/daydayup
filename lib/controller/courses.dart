@@ -241,31 +241,58 @@ class CoursesController extends GetxController {
     }
     await rebuildEachDateLessons();
   }
+
+  // change user for all courses and lessons.
+  Future<void> switchAllUser(User from, User to) async {
+    for (final course in courses) {
+      if (course.user.id == from.id) {
+        course.user = to;
+        await DataBase().upsertCourse(course);
+      }
+    }
+    for (final lesson in courseLessons.values.expand((element) => element)) {
+      if (lesson.user.id == from.id) {
+        lesson.user = to;
+        await DataBase().updateLesson(lesson);
+      }
+    }
+    await rebuildEachDateLessons();
+  }
 }
 
 class CourseStatus {
-  // int total;
   int completed;
-  int notStarted;
-  int canceled;
-  int notAttended;
+  int total;
+  double unitCost;
 
   CourseStatus({
-    // required this.total,
     required this.completed,
-    required this.notStarted,
-    this.canceled = 0,
-    this.notAttended = 0,
+    required this.total,
+    this.unitCost = 0,
   });
 
   factory CourseStatus.fromCourses(Course course, List<Lesson> lessons) {
-    // todo! different pattern, not the some.
-    return CourseStatus(
-      // total: course.timeTable.courseLength,
-      completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
-      notStarted: lessons.where((lesson) => lesson.status == LessonStatus.notStarted).length,
-      canceled: lessons.where((lesson) => lesson.status == LessonStatus.canceled).length,
-      notAttended: lessons.where((lesson) => lesson.status == LessonStatus.notAttended).length,
-    );
+    switch (course.pattern.type) {
+      case PatternType.costClassTimeUnit:
+        return CourseStatus(
+          completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
+          total: -1,
+          unitCost: course.pattern.value,
+        );
+      case PatternType.eachSingleLesson:
+        return CourseStatus(
+          completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
+          total: course.pattern.value.toInt(),
+        );
+    }
+  }
+
+  String fmt() {
+    switch (total) {
+      case -1:
+        return '$completed✅($unitCost课时)';
+      default:
+        return '$completed✅/$total';
+    }
   }
 }

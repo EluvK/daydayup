@@ -94,6 +94,7 @@ const _$LessonStatusEnumMap = {
 CourseTimeTable _$CourseTimeTableFromJson(Map<String, dynamic> json) =>
     CourseTimeTable(
       startDate: DateTime.parse(json['startDate'] as String),
+      weekType: $enumDecode(_$WeekTypeEnumMap, json['weekType']),
       daysOfWeek: (json['daysOfWeek'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
@@ -104,10 +105,16 @@ CourseTimeTable _$CourseTimeTableFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$CourseTimeTableToJson(CourseTimeTable instance) =>
     <String, dynamic>{
       'startDate': instance.startDate.toIso8601String(),
+      'weekType': _$WeekTypeEnumMap[instance.weekType]!,
       'daysOfWeek': instance.daysOfWeek,
       'lessonStartTime': instance.lessonStartTime.toIso8601String(),
       'duration': instance.duration.inMicroseconds,
     };
+
+const _$WeekTypeEnumMap = {
+  WeekType.weekly: 7,
+  WeekType.biWeekly: 14,
+};
 
 Pattern _$PatternFromJson(Map<String, dynamic> json) => Pattern(
       type: $enumDecode(_$PatternTypeEnumMap, json['type']),

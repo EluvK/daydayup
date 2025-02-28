@@ -165,6 +165,7 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
             )),
         if (!widget.isCreateNew)
           DangerousZone(children: [
+            Text("    删除课程组将同时删除课程组下的所有课程、课堂记录以及课时账单。\n"),
             DoubleClickButton(
               buttonBuilder: (onPressed) => ElevatedButton(
                 onPressed: onPressed,

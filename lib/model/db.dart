@@ -61,7 +61,7 @@ class DataBase {
 
         // insert a default user
         await db.execute('''
-          INSERT INTO users (id, name, color) VALUES ('default', '我', 0xFF3F3F00)
+          INSERT INTO users (id, name, color) VALUES ('default', '默认用户', 0xFF3F3F00)
         ''');
       },
     );

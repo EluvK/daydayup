@@ -46,19 +46,16 @@ class DangerousZone extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 警告图标和文字
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "APP数据仅本地保存，删除操作不可逆，谨慎操作",
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.8,
-                ),
+          Center(
+            child: Text(
+              "APP数据仅本地保存，删除操作不可逆，谨慎操作",
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 4),
 

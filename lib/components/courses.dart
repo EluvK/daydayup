@@ -119,7 +119,9 @@ class _CoursesTableState extends State<CoursesTable> {
                             ? [
                                 Text('...'),
                               ]
-                            : e.value.map((e) => CourseTile(course: e, editable: false)).toList(),
+                            : e.value
+                                .map((e) => CourseTile(course: e, status: coursesController.courseStatus[e.id]!))
+                                .toList(),
                       ),
                     )
                     .toList(),
@@ -140,7 +142,7 @@ class _CoursesTableState extends State<CoursesTable> {
                       itemCount: noGroupCourses.length,
                       itemBuilder: (context, index) {
                         var course = noGroupCourses[index];
-                        return CourseTile(course: course, editable: false);
+                        return CourseTile(course: course, status: coursesController.courseStatus[course.id]!);
                       },
                     )
                   ],
@@ -157,20 +159,22 @@ class CourseTile extends StatelessWidget {
   const CourseTile({
     super.key,
     required this.course,
-    this.editable = true,
+    required this.status,
+    this.editable = false,
     this.showUser = true,
   });
 
   final Course course;
+  final CourseStatus status;
   final bool editable;
   final bool showUser;
 
   @override
   Widget build(BuildContext context) {
-    // todo add day of week status
-    var daysOfWeek = concatSelectedDays(course.timeTable.daysOfWeek);
+    var daysOfWeek = concatSelectedDays(course.timeTable.weekType, course.timeTable.daysOfWeek);
     var time =
         "${DateFormat.Hm().format(course.timeTable.startDate.toLocal())}-${DateFormat.Hm().format(course.timeTable.startDate.toLocal().add(course.timeTable.duration))}";
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
       decoration: BoxDecoration(
@@ -205,7 +209,13 @@ class CourseTile extends StatelessWidget {
                         icon: Icon(Icons.edit),
                       )
                     : null,
-                title: Text(course.name),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(course.name),
+                    Text(status.fmt()),
+                  ],
+                ),
                 subtitle: Text("$daysOfWeek, $time"),
               ),
             )

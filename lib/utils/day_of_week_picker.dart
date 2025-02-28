@@ -1,11 +1,14 @@
+import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/time_picker.dart';
 import 'package:flutter/material.dart';
 
 class DayOfWeekPickerWidget extends StatefulWidget {
-  const DayOfWeekPickerWidget({super.key, required this.initialSelectedDays, required this.onChanged});
+  const DayOfWeekPickerWidget(
+      {super.key, required this.initialWeekType, required this.initialSelectedDays, required this.onChanged});
 
+  final WeekType initialWeekType;
   final List<String> initialSelectedDays;
-  final void Function(List<String>) onChanged;
+  final void Function(WeekType, List<String>) onChanged;
 
   @override
   State<DayOfWeekPickerWidget> createState() => _DayOfWeekPickerWidgetState();
@@ -13,12 +16,14 @@ class DayOfWeekPickerWidget extends StatefulWidget {
 
 class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
   List<String> selectedDays = [];
+  WeekType weekType = WeekType.weekly;
 
   final TimeTitleEnum title = TimeTitleEnum.dayOfWeek;
 
   @override
   void initState() {
     selectedDays = widget.initialSelectedDays;
+    weekType = widget.initialWeekType;
     super.initState();
   }
 
@@ -45,11 +50,27 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
                 Expanded(
                   // flex: 1,
                   child: Text(
-                    "每${concatSelectedDays(selectedDays)}上课",
+                    "${concatSelectedDays(weekType, selectedDays)}上课",
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
                 const SizedBox(width: 12),
+                SegmentedButton(
+                  segments: [
+                    ButtonSegment<WeekType>(value: WeekType.weekly, label: Text('每周')),
+                    ButtonSegment<WeekType>(value: WeekType.biWeekly, label: Text('隔周')),
+                  ],
+                  selected: {weekType},
+                  onSelectionChanged: (Set<WeekType> selected) {
+                    weekType = selected.first;
+                    setState(() {});
+                    widget.onChanged(weekType, selectedDays);
+                  },
+                  style: const ButtonStyle(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity(horizontal: -3, vertical: -2),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -74,7 +95,7 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
                       }
                       selectedDays.sort((a, b) => daysOfWeek.indexOf(a).compareTo(daysOfWeek.indexOf(b)));
                       setState(() {});
-                      widget.onChanged(selectedDays);
+                      widget.onChanged(weekType, selectedDays);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -105,6 +126,7 @@ String getDayOfWeek(DateTime date) {
   return daysOfWeek[date.weekday - 1];
 }
 
-String concatSelectedDays(List<String> selectedDays) {
-  return selectedDays.isEmpty ? ' .. ' : selectedDays.join('、');
+String concatSelectedDays(WeekType weekType, List<String> selectedDays) {
+  var days = selectedDays.isEmpty ? ' .. ' : selectedDays.join('、');
+  return '${weekType == WeekType.biWeekly ? '每两周' : '每周'}|$days';
 }

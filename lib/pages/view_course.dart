@@ -107,7 +107,7 @@ class _ViewCourseState extends State<ViewCourse> {
         ),
         TextViewWidget(
           title: TimeTitleEnumWrapper(TimeTitleEnum.dayOfWeek),
-          value: concatSelectedDays(course.timeTable.daysOfWeek),
+          value: concatSelectedDays(course.timeTable.weekType, course.timeTable.daysOfWeek),
         ),
         Divider(),
 
