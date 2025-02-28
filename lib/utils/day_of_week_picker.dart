@@ -61,6 +61,7 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
                     ButtonSegment<WeekType>(value: WeekType.biWeekly, label: Text('隔周')),
                   ],
                   selected: {weekType},
+                  showSelectedIcon: false,
                   onSelectionChanged: (Set<WeekType> selected) {
                     weekType = selected.first;
                     setState(() {});
@@ -68,7 +69,7 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
                   },
                   style: const ButtonStyle(
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity(horizontal: -3, vertical: -2),
+                    visualDensity: VisualDensity(horizontal: -1, vertical: -2),
                   ),
                 ),
               ],

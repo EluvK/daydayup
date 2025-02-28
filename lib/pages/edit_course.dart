@@ -167,6 +167,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                     ButtonSegment<PatternType>(value: PatternType.costClassTimeUnit, tooltip: '课时', label: Text('课时')),
                   ],
                   selected: {editCourse.pattern.type},
+                  showSelectedIcon: false,
                   onSelectionChanged: (Set<PatternType> newSelection) {
                     editCourse.pattern.type = newSelection.first;
                     if (editCourse.pattern.type == PatternType.costClassTimeUnit) {
@@ -174,12 +175,13 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                     } else {
                       editCourse.pattern.value = 10;
                     }
+
                     setState(() {});
                     // tryCalculateExpectedLessons(); // todo uncomment this line
                   },
                   style: const ButtonStyle(
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity(horizontal: -3, vertical: -2),
+                    visualDensity: VisualDensity(horizontal: -1, vertical: -2),
                   ),
                 ),
               ],
