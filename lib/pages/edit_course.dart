@@ -514,21 +514,13 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
               child: const SizedBox(
                 height: 32,
                 width: 32,
-                child: Center(
-                  child: Icon(
-                    Icons.bookmarks_rounded,
-                    color: Colors.white,
-                  ),
-                ),
+                child: Center(child: Icon(Icons.bookmarks_rounded, color: Colors.white)),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               // flex: 1,
-              child: Text(
-                '课程组',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              child: Text('课程组', style: Theme.of(context).textTheme.bodyMedium),
             ),
             Flexible(
               flex: 2,

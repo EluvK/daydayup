@@ -1,9 +1,11 @@
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/double_click.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/view_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class ViewCourseGroupPage extends StatelessWidget {
   const ViewCourseGroupPage({super.key});
@@ -81,14 +83,15 @@ class _ViewCourseGroupState extends State<ViewCourseGroup> {
           children: [
             for (var bill in bills)
               ListTile(
-                title: Text(bill.description),
-                subtitle: Text('${bill.amount} at ${bill.time}'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    // coursesController.deleteCourseGroupBill(bill.id);
+                title: Text('${DateFormat.yMd().format(bill.time)} ${DateFormat.Hm().format(bill.time)}'),
+                subtitle: Text('+ ${bill.amount} ${bill.description.isEmpty ? '' : '\n${bill.description}'}'),
+                trailing: DoubleClickButton(
+                  buttonBuilder: (onPressed) => IconButton(onPressed: onPressed, icon: const Icon(Icons.delete)),
+                  onDoubleClick: () async {
+                    await coursesController.deleteCourseGroupBill(bill);
                     setState(() {});
                   },
+                  firstClickHint: '删除将扣除课时',
                 ),
               ),
           ],

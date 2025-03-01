@@ -105,24 +105,8 @@ class _CoursesTableState extends State<CoursesTable> {
                 ],
                 groupCourses.entries
                     .map(
-                      (MapEntry<String, List<Course>> e) => ExpansionTile(
-                        initiallyExpanded: e.value.isNotEmpty,
-                        childrenPadding: const EdgeInsets.only(bottom: 8),
-                        title: Text(courseGroups.firstWhere((element) => element.id == e.key).name),
-                        trailing: IconButton(
-                          icon: Icon(Icons.more_horiz),
-                          onPressed: () async {
-                            await Get.toNamed('/view-course-group', arguments: [e.key]);
-                          },
-                        ),
-                        children: e.value.isEmpty
-                            ? [
-                                Text('...'),
-                              ]
-                            : e.value
-                                .map((e) => CourseTile(course: e, status: coursesController.courseStatus[e.id]!))
-                                .toList(),
-                      ),
+                      (MapEntry<String, List<Course>> e) =>
+                          courseGroupWidget(courseGroups.firstWhere((element) => element.id == e.key), e.value),
                     )
                     .toList(),
                 if (noGroupCourses.isNotEmpty)
@@ -151,6 +135,32 @@ class _CoursesTableState extends State<CoursesTable> {
           }),
         ),
       ],
+    );
+  }
+
+  Widget courseGroupWidget(CourseGroup courseGroup, List<Course> courses) {
+    var title = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(courseGroup.name),
+        Text("剩余 ${courseGroup.restAmount.toString()} 课时", style: TextStyle(color: Colors.blueGrey, fontSize: 12)),
+      ],
+    );
+    return ExpansionTile(
+      initiallyExpanded: courses.isNotEmpty,
+      childrenPadding: const EdgeInsets.only(bottom: 8),
+      title: title,
+      trailing: IconButton(
+        icon: Icon(Icons.more_horiz),
+        onPressed: () async {
+          await Get.toNamed('/view-course-group', arguments: [courseGroup.id]);
+        },
+      ),
+      children: courses.isEmpty
+          ? [
+              Text('...'),
+            ]
+          : courses.map((e) => CourseTile(course: e, status: coursesController.courseStatus[e.id]!)).toList(),
     );
   }
 }

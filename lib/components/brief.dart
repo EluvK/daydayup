@@ -14,6 +14,14 @@ class Brief extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('日程'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add_chart),
+            onPressed: () {
+              Get.toNamed('/edit-lesson');
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),

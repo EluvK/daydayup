@@ -284,14 +284,14 @@ class DataBase {
     });
   }
 
-  // Future<void> upsertLesson(Lesson lesson) async {
-  //   final db = await getDb();
-  //   await db.insert(
-  //     'lessons',
-  //     lesson.toJson(),
-  //     conflictAlgorithm: ConflictAlgorithm.replace,
-  //   );
-  // }
+  Future<void> upsertLesson(Lesson lesson) async {
+    final db = await getDb();
+    await db.insert(
+      'lessons',
+      lesson.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
 
   // Future<void> upsertLessons(List<Lesson> lessons) async {
   //   final db = await getDb();
@@ -306,15 +306,15 @@ class DataBase {
   //   await batch.commit(noResult: true);
   // }
 
-  Future<void> updateLesson(Lesson lesson) async {
-    final db = await getDb();
-    await db.update(
-      'lessons',
-      lesson.toJson(),
-      where: 'courseId = ? AND id = ?',
-      whereArgs: [lesson.courseId, lesson.id],
-    );
-  }
+  // Future<void> updateLesson(Lesson lesson) async {
+  //   final db = await getDb();
+  //   await db.update(
+  //     'lessons',
+  //     lesson.toJson(),
+  //     where: 'courseId = ? AND id = ?',
+  //     whereArgs: [lesson.courseId, lesson.id],
+  //   );
+  // }
 
   Future<Lesson?> getLesson(String courseId, String id) async {
     final db = await getDb();

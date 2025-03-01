@@ -200,6 +200,26 @@ class Lesson {
     );
   }
 
+  Lesson copyWith({
+    String? courseId,
+    String? id,
+    String? name,
+    User? user,
+    DateTime? startTime,
+    DateTime? endTime,
+    LessonStatus? status,
+  }) {
+    return Lesson(
+      courseId: courseId ?? this.courseId,
+      id: id ?? this.id,
+      name: name ?? this.name,
+      user: user ?? this.user,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      status: status ?? this.status,
+    );
+  }
+
   factory Lesson.fromJson(Map<String, dynamic> json) => _$LessonFromJson(json);
   Map<String, dynamic> toJson() => _$LessonToJson(this);
 }

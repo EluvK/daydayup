@@ -62,7 +62,7 @@ class CoursesController extends GetxController {
               'lesson: ${lesson.startTime} ${lesson.name} ${lesson.status}: ${(lesson.status == LessonStatus.notStarted && lesson.endTime.isBefore(now))}');
           if (lesson.status == LessonStatus.notStarted && lesson.endTime.isBefore(now)) {
             lesson.status = LessonStatus.finished;
-            await DataBase().updateLesson(lesson);
+            await DataBase().upsertLesson(lesson);
             final Course course = getCourse(lesson.courseId);
             if (course.pattern.type == PatternType.costClassTimeUnit && course.groupId != null) {
               if (courseGroupCosts[course.groupId!] == null) {
@@ -136,14 +136,17 @@ class CoursesController extends GetxController {
     return await DataBase().getCourseGroupBills(groupId);
   }
 
-  Future<void> deleteCourseGroupBill(String billId) async {
-    await DataBase().deleteCourseGroupBill(billId);
+  Future<void> deleteCourseGroupBill(CourseGroupBill bill) async {
+    final CourseGroup courseGroup = getCourseGroup(bill.groupId);
+    courseGroup.restAmount -= bill.amount;
+    await upsertCourseGroup(courseGroup);
+    await DataBase().deleteCourseGroupBill(bill.id);
   }
 
   Future<void> deleteCourseGroupBills(String groupId) async {
     final bills = await getCourseGroupBills(groupId);
     for (final bill in bills) {
-      await deleteCourseGroupBill(bill.id);
+      await DataBase().deleteCourseGroupBill(bill.id);
     }
   }
 
@@ -215,12 +218,23 @@ class CoursesController extends GetxController {
     return courseLessons[courseId]!.firstWhere((lesson) => lesson.id == lessonId);
   }
 
-  Future<void> updateLesson(Lesson lesson) async {
-    final index = courseLessons[lesson.courseId]!.indexWhere((element) => element.id == lesson.id);
-    courseLessons[lesson.courseId]![index] = lesson;
+  Future<void> upsertLesson(Lesson lesson) async {
+    await DataBase().upsertLesson(lesson);
+    if (courseLessons[lesson.courseId]!.indexWhere((element) => element.id == lesson.id) == -1) {
+      courseLessons[lesson.courseId]!.add(lesson);
+    } else {
+      final index = courseLessons[lesson.courseId]!.indexWhere((element) => element.id == lesson.id);
+      courseLessons[lesson.courseId]![index] = lesson;
+    }
     courseStatus[lesson.courseId] =
         CourseStatus.fromCourses(getCourse(lesson.courseId), courseLessons[lesson.courseId]!);
-    await DataBase().updateLesson(lesson);
+    await rebuildEachDateLessons();
+  }
+
+  Future<void> deleteLesson(String courseId, String lessonId) async {
+    await DataBase().deleteLesson(courseId, lessonId);
+    courseLessons[courseId]!.removeWhere((element) => element.id == lessonId);
+    courseStatus[courseId] = CourseStatus.fromCourses(getCourse(courseId), courseLessons[courseId]!);
     await rebuildEachDateLessons();
   }
 
@@ -236,7 +250,7 @@ class CoursesController extends GetxController {
     for (final lesson in courseLessons.values.expand((element) => element)) {
       if (lesson.user.id == user.id) {
         lesson.user = user;
-        await DataBase().updateLesson(lesson);
+        await DataBase().upsertLesson(lesson);
       }
     }
     await rebuildEachDateLessons();
@@ -253,7 +267,7 @@ class CoursesController extends GetxController {
     for (final lesson in courseLessons.values.expand((element) => element)) {
       if (lesson.user.id == from.id) {
         lesson.user = to;
-        await DataBase().updateLesson(lesson);
+        await DataBase().upsertLesson(lesson);
       }
     }
     await rebuildEachDateLessons();
