@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:board_datetime_picker/board_datetime_picker.dart';
 import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
@@ -156,6 +157,11 @@ class _CalendarTableState extends State<CalendarTable> {
                   curve: Curves.easeOut,
                 );
               },
+              onChange: (value) {
+                setState(() {
+                  _onDaySelected(value, value);
+                });
+              },
             );
           },
         ),
@@ -264,6 +270,7 @@ class _CalendarHeader extends StatelessWidget {
   final bool clearButtonVisible;
   final VoidCallback onToggleOnRangeTap;
   final bool toggleOnRangeVisible;
+  final void Function(DateTime value) onChange;
 
   const _CalendarHeader({
     required this.focusedDay,
@@ -274,6 +281,7 @@ class _CalendarHeader extends StatelessWidget {
     required this.clearButtonVisible,
     required this.onToggleOnRangeTap,
     required this.toggleOnRangeVisible,
+    required this.onChange,
   });
 
   @override
@@ -285,9 +293,41 @@ class _CalendarHeader extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 16.0),
-          Text(
-            headerText,
-            style: const TextStyle(fontSize: 26.0),
+          InkWell(
+            onTap: () async {
+              final result = await showBoardDateTimePicker(
+                minimumDate: kFirstDay,
+                maximumDate: kLastDay,
+                context: context,
+                pickerType: DateTimePickerType.date,
+                initialDate: focusedDay,
+                options: BoardDateTimeOptions(
+                  languages: BoardPickerLanguages(
+                    today: '今天',
+                    tomorrow: '明天',
+                    yesterday: '昨天',
+                    now: '现在',
+                    locale: 'zh',
+                  ),
+                  startDayOfWeek: DateTime.monday,
+                  pickerFormat: PickerFormat.ymd,
+                  boardTitle: '跳转日期',
+                  pickerSubTitles: BoardDateTimeItemTitles(year: '年', month: '月', day: '日'),
+                  withSecond: false,
+                ),
+                onChanged: (value) {
+                  onChange(value.toUtc());
+                },
+              );
+              print('result: $result');
+              if (result != null) {
+                onChange(result.toUtc());
+              }
+            },
+            child: Text(
+              headerText,
+              style: const TextStyle(fontSize: 26.0),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.calendar_today, size: 20.0),

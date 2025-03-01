@@ -30,6 +30,9 @@ class LessonTile extends StatelessWidget {
       time =
           "${DateFormat.yMd().format(lesson.startTime.toLocal())},${DateFormat.E().format(lesson.startTime.toLocal())},$time";
     }
+    if (course.description.isNotEmpty) {
+      time = "$time\n${course.description}";
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),

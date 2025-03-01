@@ -104,6 +104,7 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
             editedCourseGroup.description = value;
           },
           initialValue: editedCourseGroup.description,
+          optional: true,
         ),
         TextViewWidget(
           title: NumberInputEnumWrapper(NumberInputEnum.courseGroupTimeUnit),

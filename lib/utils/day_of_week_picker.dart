@@ -128,6 +128,9 @@ String getDayOfWeek(DateTime date) {
 }
 
 String concatSelectedDays(WeekType weekType, List<String> selectedDays) {
-  var days = selectedDays.isEmpty ? ' .. ' : selectedDays.join('、');
+  if (selectedDays.isEmpty) {
+    return '无安排';
+  }
+  var days = selectedDays.length == 7 ? '每天' : selectedDays.join('、');
   return '${weekType == WeekType.biWeekly ? '每两周' : '每周'}|$days';
 }

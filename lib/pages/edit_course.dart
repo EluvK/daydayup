@@ -135,6 +135,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             editCourse.description = value;
           },
           initialValue: editCourse.description,
+          optional: true,
         ),
         UserPicker(
           onChanged: (selectedUserIds) {
@@ -407,10 +408,10 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
       if (showError) Get.snackbar('❌ 错误', '课程名称不能为空');
       return false;
     }
-    if (editCourse.timeTable.daysOfWeek.isEmpty) {
-      if (showError) Get.snackbar('❌ 错误', '请选择星期几上课');
-      return false;
-    }
+    // if (editCourse.timeTable.daysOfWeek.isEmpty) {
+    //   if (showError) Get.snackbar('❌ 错误', '请选择星期几上课');
+    //   return false;
+    // }
     switch (editCourse.pattern.type) {
       case PatternType.costClassTimeUnit:
         if (editCourse.groupId == null) {
@@ -619,20 +620,23 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course) {
     generateMore = false;
     for (var eachCourse in editCourses) {
       // print('courseGroupCourse: ${courseGroupCourse.name}, cost: ${courseGroupCourse.pattern.value}');
-      if (courseGroup.restAmount - generateCourseTimeUnitCost < eachCourse.pattern.value) {
+      if (courseGroup.restAmount - generateCourseTimeUnitCost < eachCourse.pattern.value ||
+          eachCourse.timeTable.daysOfWeek.isEmpty) {
         print('cant generate ${eachCourse.name} rest amount: ${courseGroup.restAmount - generateCourseTimeUnitCost}');
         continue;
       }
       generateMore = true;
-    }
-    for (var eachCourse in editCourses) {
-      print(
-          'each Course: ${eachCourse.name}, startDate: ${eachCourse.timeTable.startDate} | ${eachCourse.timeTable.daysOfWeek.contains(getDayOfWeek(courseDate))} | ${!eachCourse.timeTable.startDate.isAfter(courseDate)}');
+      print('each Course: ${eachCourse.name}, startDate: ${eachCourse.timeTable.startDate} | ${matchCourseTimeType(
+        eachCourse.timeTable.startDate,
+        courseDate,
+        eachCourse.timeTable.weekType,
+        eachCourse.timeTable.daysOfWeek,
+      )} | ${!eachCourse.timeTable.startDate.isAfter(courseDate)}');
       if (matchCourseTimeType(
-            course.timeTable.startDate,
+            eachCourse.timeTable.startDate,
             courseDate,
-            course.timeTable.weekType,
-            course.timeTable.daysOfWeek,
+            eachCourse.timeTable.weekType,
+            eachCourse.timeTable.daysOfWeek,
           ) &&
           !eachCourse.timeTable.startDate.isAfter(courseDate)) {
         var startTime = eachCourse.timeTable.lessonStartTime
@@ -699,7 +703,7 @@ List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course
 
   DateTime courseDate = (resultLessons.isEmpty ? course.timeTable.startDate : nowTime).toLocal();
   print('reCal start from: $courseDate');
-  while (completedCount < course.pattern.value.toInt()) {
+  while (completedCount < course.pattern.value.toInt() && course.timeTable.daysOfWeek.isNotEmpty) {
     if (matchCourseTimeType(
       course.timeTable.startDate,
       courseDate,

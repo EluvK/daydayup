@@ -9,6 +9,7 @@ class TextInputWidget extends StatelessWidget {
     required this.initialValue,
     this.onFocusChange,
     this.autoFocus = false,
+    this.optional = false,
   });
   final focusNode = FocusNode();
 
@@ -16,6 +17,7 @@ class TextInputWidget extends StatelessWidget {
   final String initialValue;
   final void Function(bool)? onFocusChange;
   final bool autoFocus;
+  final bool optional;
   final void Function(String) onChanged;
 
   @override
@@ -59,7 +61,12 @@ class TextInputWidget extends StatelessWidget {
                   autofocus: autoFocus,
                   focusNode: focusNode,
                   controller: TextEditingController(text: initialValue),
-                  decoration: InputDecoration(isDense: true, contentPadding: EdgeInsets.all(8)),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.all(8),
+                    hintText: optional ? '(可选)' : '',
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                   onChanged: (value) {

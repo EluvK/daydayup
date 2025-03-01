@@ -174,6 +174,9 @@ class CourseTile extends StatelessWidget {
     var daysOfWeek = concatSelectedDays(course.timeTable.weekType, course.timeTable.daysOfWeek);
     var time =
         "${DateFormat.Hm().format(course.timeTable.startDate.toLocal())}-${DateFormat.Hm().format(course.timeTable.startDate.toLocal().add(course.timeTable.duration))}";
+    if (course.description.isNotEmpty) {
+      time = "$time\n${course.description}";
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
