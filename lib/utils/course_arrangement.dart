@@ -9,7 +9,7 @@ import 'package:uuid/uuid.dart';
 /// 场景1：修改课程信息后，重新计算课程安排，此时 (mut course, null)
 ///
 /// 场景2：调整某一节课、新建课程后，重新计算课程安排，此时 (course, mut lesson)
-Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? editLesson}) {
+Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? editLesson, double deltaTimeUnit = 0}) {
   var coursesController = Get.find<CoursesController>();
   final courseGroupCourses = coursesController.getCourseGroupCourses(course.groupId!);
   final List<Course> editCourses = courseGroupCourses.map((e) => e.clone()).toList();
@@ -25,7 +25,7 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? 
   // update course information in editCourses
   for (var i = 0; i < editCourses.length; i++) {
     final courseId = editCourses[i].id;
-    currentCourseLessons[editCourses[i]] = coursesController.getCourseLessons(courseId);
+    currentCourseLessons[editCourses[i]] = coursesController.getCourseLessons(courseId).map((e) => e.clone()).toList();
   }
 
   if (editLesson != null) {
@@ -65,7 +65,7 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? 
     }
   }
 
-  double generateCourseTimeUnitCost = 0;
+  double generateCourseTimeUnitCost = deltaTimeUnit;
   bool generateMore = true;
   DateTime courseDate = nowTime.toUtc();
   for (var eachCourse in editCourses) {

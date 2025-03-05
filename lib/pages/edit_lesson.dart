@@ -353,7 +353,17 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
         print('reCalculateLessonsForEachSingle: ${expectedLessonsMap[thisCourse]}');
         break;
       case PatternType.costClassTimeUnit:
-        expectedLessonsMap.value = reCalculateLessonsForTimeUnit(thisCourse);
+        double deltaTimeUnit = 0;
+        if ((lessonOriginalStatus == LessonStatus.notStarted || lessonOriginalStatus == LessonStatus.canceled) &&
+            (editLesson.status == LessonStatus.finished || editLesson.status == LessonStatus.notAttended)) {
+          deltaTimeUnit = thisCourse.pattern.value;
+        }
+        if ((lessonOriginalStatus == LessonStatus.finished || lessonOriginalStatus == LessonStatus.notAttended) &&
+            (editLesson.status == LessonStatus.notStarted || editLesson.status == LessonStatus.canceled)) {
+          deltaTimeUnit = -thisCourse.pattern.value;
+        }
+        expectedLessonsMap.value =
+            reCalculateLessonsForTimeUnit(thisCourse, editLesson: editLesson, deltaTimeUnit: deltaTimeUnit);
         break;
     }
 

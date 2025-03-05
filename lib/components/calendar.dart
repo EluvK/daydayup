@@ -130,7 +130,8 @@ class _CalendarTableState extends State<CalendarTable> {
             return _CalendarHeader(
               focusedDay: value,
               onTodayButtonTap: () {
-                setState(() => _focusedDay.value = DateTime.now());
+                setState(() => _onDaySelected(DateTime.now(), DateTime.now()));
+                //  _focusedDay.value = DateTime.now());
               },
               clearButtonVisible: canClearSelection,
               onClearButtonTap: () {
@@ -330,7 +331,7 @@ class _CalendarHeader extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.calendar_today, size: 20.0),
+            icon: const Icon(Icons.today, size: 20.0),
             visualDensity: VisualDensity.compact,
             onPressed: onTodayButtonTap,
           ),
