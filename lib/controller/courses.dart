@@ -276,11 +276,13 @@ class CoursesController extends GetxController {
 
 class CourseStatus {
   int completed;
+  int notAttended;
   int total;
   double unitCost;
 
   CourseStatus({
     required this.completed,
+    required this.notAttended,
     required this.total,
     this.unitCost = 0,
   });
@@ -290,23 +292,26 @@ class CourseStatus {
       case PatternType.costClassTimeUnit:
         return CourseStatus(
           completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
+          notAttended: lessons.where((lesson) => lesson.status == LessonStatus.notAttended).length,
           total: -1,
           unitCost: course.pattern.value,
         );
       case PatternType.eachSingleLesson:
         return CourseStatus(
           completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
+          notAttended: lessons.where((lesson) => lesson.status == LessonStatus.notAttended).length,
           total: course.pattern.value.toInt(),
         );
     }
   }
 
   String fmt() {
+    String optionalNotAttended = notAttended > 0 ? '$notAttended❎' : '';
     switch (total) {
       case -1:
-        return '$completed✅($unitCost课时)';
+        return '$optionalNotAttended$completed✅($unitCost课时)';
       default:
-        return '$completed✅/$total';
+        return '$optionalNotAttended$completed✅/$total';
     }
   }
 }

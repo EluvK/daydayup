@@ -1,6 +1,8 @@
+import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/course_arrangement.dart';
 import 'package:daydayup/utils/dangerous_zone.dart';
 import 'package:daydayup/utils/double_click.dart';
 import 'package:daydayup/utils/status_picker.dart';
@@ -81,10 +83,21 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
   late final lessonOriginalStatus = widget.lesson.status;
 
   late Lesson editLesson;
+  late final Course thisCourse;
+
+  late final List<Lesson> currentLessons = coursesController.getCourseLessons(widget.lesson.courseId);
+  List<Lesson> editLessons = [];
+  final RxMap<Course, List<Lesson>> expectedLessonsMap = <Course, List<Lesson>>{}.obs;
+  final RxMap<Course, List<Lesson>> createNewViewLessonsMap = <Course, List<Lesson>>{}.obs;
+
+  final RxBool viewCurrentFutureLessons = true.obs;
+  final RxBool viewExpectedFutureLessons = false.obs;
 
   @override
   void initState() {
     editLesson = widget.lesson.clone();
+    editLessons = currentLessons.map((e) => e.clone()).toList();
+    thisCourse = coursesController.getCourse(editLesson.courseId);
     super.initState();
   }
 
@@ -110,12 +123,18 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
         StatusPicker(
           status: editLesson.status,
           onChange: (value) {
+            if (value == lessonOriginalStatus) {
+              print('status not changed, skip reCalculateLessons');
+              setState(() {
+                editLesson.status = value;
+                viewCurrentFutureLessons.value = true;
+                viewExpectedFutureLessons.value = false;
+              });
+              return;
+            }
             setState(() {
               editLesson.status = value;
-              if (value != lessonOriginalStatus) {
-                // might need to update course arrangement
-                reCalculateLessons(value, lessonOriginalStatus);
-              }
+              tryCalculateExpectedLessons();
             });
           },
         ),
@@ -147,8 +166,14 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
         // 保存
         ElevatedButton(
           onPressed: () async {
-            if (validateUserInput()) {
-              await coursesController.upsertLesson(editLesson);
+            if (validateUserInput(showError: true)) {
+              await tryCalculateExpectedLessons();
+
+              // await coursesController.upsertLesson(editLesson);
+              for (var course in expectedLessonsMap.keys) {
+                await coursesController.upsertCourse(course, expectedLessonsMap[course]!);
+              }
+
               Get.offAllNamed('/');
               Get.toNamed('/view-lesson', arguments: [editLesson.courseId, editLesson.id]);
             }
@@ -158,6 +183,29 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
         Divider(),
 
         // 课程影响预览
+        // 修改前课程安排预览（修改后不再可见）
+        if (viewCurrentFutureLessons.value)
+          DynamicLessonList(
+            title: "该课堂排课",
+            course: thisCourse,
+            lessons: currentLessons.where((element) => element.status == LessonStatus.notStarted).toList(),
+          ),
+        if (viewExpectedFutureLessons.value)
+          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name == thisCourse.name))
+            DynamicLessonList(
+              title: "修改后该课堂排课 ${entry.key.name}",
+              course: entry.key,
+              lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
+              titleColor: Colors.red[300],
+            ),
+        if (viewExpectedFutureLessons.value && thisCourse.pattern.type == PatternType.costClassTimeUnit)
+          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name != thisCourse.name))
+            DynamicLessonList(
+              title: "修改后其它课堂排课 ${entry.key.name}",
+              course: entry.key,
+              lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
+              titleColor: Colors.red[300],
+            ),
 
         if (!widget.isCreateNew)
           DangerousZone(children: [
@@ -249,24 +297,24 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
     );
   }
 
-  bool validateUserInput() {
+  bool validateUserInput({bool showError = false}) {
     final coursesController = Get.find<CoursesController>();
     final now = DateTime.now();
     if (editLesson.status == LessonStatus.notStarted && editLesson.endTime.isBefore(now)) {
-      Get.snackbar('错误', '课程时间已过，状态不能为未完成');
+      if (showError) Get.snackbar('错误', '课程时间已过，状态不能为未完成');
       return false;
     }
     if (editLesson.startTime.isAfter(editLesson.endTime)) {
-      Get.snackbar('错误', '开始时间不能晚于结束时间');
+      if (showError) Get.snackbar('错误', '开始时间不能晚于结束时间');
       return false;
     }
     if (editLesson.name.isEmpty) {
-      Get.snackbar('错误', '课程名称不能为空');
+      if (showError) Get.snackbar('错误', '课程名称不能为空');
       return false;
     }
     if (editLesson.id.isEmpty ||
         coursesController.courses.firstWhereOrNull((element) => element.id == editLesson.courseId) == null) {
-      Get.snackbar('错误', '课程ID不能为空');
+      if (showError) Get.snackbar('错误', '课程ID不能为空');
       return false;
     }
 
@@ -274,11 +322,44 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
   }
 
   void reCalculateLessons(LessonStatus newStatus, LessonStatus oldStatus) {
-    // todo some work here.
     if (newStatus == oldStatus) {
-      // clear work
+      print('status not changed, skip reCalculateLessons');
+      viewCurrentFutureLessons.value = true;
+      viewExpectedFutureLessons.value = false;
       return;
     }
-    // if (newStatus)
+
+    switch (thisCourse.pattern.type) {
+      case PatternType.eachSingleLesson:
+        editLessons.where((element) => element.id == editLesson.id).first.status = newStatus;
+        expectedLessonsMap.value = {thisCourse: reCalculateLessonsForEachSingle(editLessons, thisCourse)};
+        print('reCalculateLessonsForEachSingle: ${expectedLessonsMap[thisCourse]}');
+        break;
+      case PatternType.costClassTimeUnit:
+        expectedLessonsMap.value = reCalculateLessonsForTimeUnit(thisCourse);
+        break;
+    }
+
+    viewCurrentFutureLessons.value = false;
+    viewExpectedFutureLessons.value = true;
+  }
+
+  Future<void> tryCalculateExpectedLessons() async {
+    if (!validateUserInput()) return;
+    switch (thisCourse.pattern.type) {
+      case PatternType.eachSingleLesson:
+        editLessons.where((element) => element.id == editLesson.id).first.status = editLesson.status;
+        expectedLessonsMap.value = {thisCourse: reCalculateLessonsForEachSingle(editLessons, thisCourse)};
+        print('reCalculateLessonsForEachSingle: ${expectedLessonsMap[thisCourse]}');
+        break;
+      case PatternType.costClassTimeUnit:
+        expectedLessonsMap.value = reCalculateLessonsForTimeUnit(thisCourse);
+        break;
+    }
+
+    setState(() {
+      viewCurrentFutureLessons.value = false;
+      viewExpectedFutureLessons.value = true;
+    });
   }
 }

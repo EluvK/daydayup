@@ -113,9 +113,9 @@ class _ViewCourseState extends State<ViewCourse> {
 
         // 课程安排
         // Align(alignment: Alignment.topLeft, child: Text('课程列表')),
-        DynamicLessonList(title: '未开始课程', course: course, lessons: notStartedLessons, editable: true),
+        DynamicLessonList(title: '未开始课堂', course: course, lessons: notStartedLessons, editable: true),
         Divider(),
-        DynamicLessonList(title: '历史课程', course: course, lessons: pastLessons, editable: true),
+        DynamicLessonList(title: '已结束课堂', course: course, lessons: pastLessons, editable: true),
         Divider(),
       ],
     );

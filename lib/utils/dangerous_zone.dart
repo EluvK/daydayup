@@ -4,7 +4,7 @@ class DangerousZone extends StatelessWidget {
   final List<Widget> children;
   final Color backgroundColor;
   final Color borderColor;
-  final Color iconColor;
+  final Color titleColor;
   final Color textColor;
   final String warningMessage;
   final IconData warningIcon;
@@ -14,7 +14,7 @@ class DangerousZone extends StatelessWidget {
     required this.children,
     this.backgroundColor = const Color(0xFFFFFBFB),
     this.borderColor = const Color(0xFF4A000A),
-    this.iconColor = const Color(0xFF840016),
+    this.titleColor = const Color(0xFFA2A29E),
     this.textColor = const Color(0xFF840016),
     this.warningMessage = "危险操作区域",
     this.warningIcon = Icons.warning_amber_rounded,
@@ -53,7 +53,7 @@ class DangerousZone extends StatelessWidget {
                 color: textColor,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 0.8,
+                letterSpacing: 0.9,
               ),
             ),
           ),
@@ -75,14 +75,14 @@ class DangerousZone extends StatelessWidget {
         children: [
           Icon(
             warningIcon,
-            color: iconColor,
+            color: titleColor,
             size: 28,
           ),
           const SizedBox(width: 10),
           Text(
             warningMessage,
             style: TextStyle(
-              color: textColor,
+              color: titleColor,
               fontSize: 14,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.8,

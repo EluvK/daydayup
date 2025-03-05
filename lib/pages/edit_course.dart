@@ -3,6 +3,7 @@ import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/color_picker.dart';
+import 'package:daydayup/utils/course_arrangement.dart';
 import 'package:daydayup/utils/dangerous_zone.dart';
 import 'package:daydayup/utils/day_of_week_picker.dart';
 import 'package:daydayup/utils/double_click.dart';
@@ -90,11 +91,6 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   late Course editCourse;
 
   late final List<Lesson> currentLessons = coursesController.getCourseLessons(widget.course.id);
-  late final List<Lesson> notStartedLessons =
-      currentLessons.where((element) => element.status == LessonStatus.notStarted).toList();
-
-  final RxList<Lesson> expectedLessons = <Lesson>[].obs;
-  final RxList<Lesson> createNewViewLessons = <Lesson>[].obs;
 
   final RxMap<Course, List<Lesson>> expectedLessonsMap = <Course, List<Lesson>>{}.obs;
   final RxMap<Course, List<Lesson>> createNewViewLessonsMap = <Course, List<Lesson>>{}.obs;
@@ -277,19 +273,8 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         ),
         Divider(),
 
-        // todo view course status
-
-        // 新课程预览 - 单课模式
-        if (widget.isCreateNew && editCourse.pattern.type == PatternType.eachSingleLesson)
-          DynamicLessonList(
-            title: "课堂列表预览",
-            course: editCourse,
-            lessons: createNewViewLessons,
-            titleColor: Colors.red[300],
-            editable: false,
-          ),
-        // 新课程预览 - 课程组模式 - self
-        if (widget.isCreateNew && editCourse.pattern.type == PatternType.costClassTimeUnit)
+        // 新课程预览 - self
+        if (widget.isCreateNew)
           for (var entry in createNewViewLessonsMap.entries.where((entry) => entry.key.name == editCourse.name))
             DynamicLessonList(
               title: "该课堂预览 ${entry.key.name}",
@@ -298,7 +283,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
               titleColor: Colors.red[300],
               editable: false,
             ),
-        // 新课程预览 - 课程组模式 - others
+        // 新课程预览 - others (if any in the same group)
         if (widget.isCreateNew && editCourse.pattern.type == PatternType.costClassTimeUnit)
           for (var entry in createNewViewLessonsMap.entries.where((entry) => entry.key.name != editCourse.name))
             DynamicLessonList(
@@ -314,17 +299,10 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
           DynamicLessonList(
             title: "该课堂排课",
             course: editCourse,
-            lessons: notStartedLessons,
+            lessons: currentLessons.where((element) => element.status == LessonStatus.notStarted).toList(),
           ),
 
-        if (viewExpectedFutureLessons.value && editCourse.pattern.type == PatternType.eachSingleLesson)
-          DynamicLessonList(
-            title: "修改后该课堂排课",
-            course: editCourse,
-            lessons: expectedLessons.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
-            titleColor: Colors.red[300],
-          ),
-        if (viewExpectedFutureLessons.value && editCourse.pattern.type == PatternType.costClassTimeUnit)
+        if (viewExpectedFutureLessons.value)
           for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name == editCourse.name))
             DynamicLessonList(
               title: "修改后该课堂排课 ${entry.key.name}",
@@ -340,6 +318,17 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
               lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
               titleColor: Colors.red[300],
             ),
+
+        // 已完成课程
+        if (!widget.isCreateNew)
+          DynamicLessonList(
+            title: "已结束课堂",
+            course: editCourse,
+            lessons: currentLessons
+                .where(
+                    (element) => element.status != LessonStatus.notStarted && element.endTime.isBefore(DateTime.now()))
+                .toList(),
+          ),
 
         Divider(),
 
@@ -367,7 +356,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
     if (widget.isCreateNew) {
       switch (editCourse.pattern.type) {
         case PatternType.eachSingleLesson:
-          createNewViewLessons.value = reCalculateLessonsForEachSingle(currentLessons, editCourse);
+          createNewViewLessonsMap.value = {editCourse: reCalculateLessonsForEachSingle(currentLessons, editCourse)};
           break;
         case PatternType.costClassTimeUnit:
           createNewViewLessonsMap.value = reCalculateLessonsForTimeUnit(editCourse);
@@ -382,7 +371,7 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
     }
     switch (editCourse.pattern.type) {
       case PatternType.eachSingleLesson:
-        expectedLessons.value = reCalculateLessonsForEachSingle(currentLessons, editCourse);
+        expectedLessonsMap.value = {editCourse: reCalculateLessonsForEachSingle(currentLessons, editCourse)};
         break;
       case PatternType.costClassTimeUnit:
         expectedLessonsMap.value = reCalculateLessonsForTimeUnit(editCourse);
@@ -545,205 +534,4 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
       ),
     );
   }
-}
-
-Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course) {
-  var coursesController = Get.find<CoursesController>();
-  final courseGroupCourses = coursesController.getCourseGroupCourses(course.groupId!);
-  final List<Course> editCourses = courseGroupCourses.map((e) => e.clone()).toList();
-
-  if (editCourses.firstWhereOrNull((element) => element.id == course.id) == null) {
-    editCourses.add(course.clone());
-  } else {
-    editCourses[editCourses.indexWhere((element) => element.id == course.id)] = course.clone();
-  }
-  final CourseGroup courseGroup = coursesController.getCourseGroup(course.groupId!);
-
-  var currentCourseLessons = <Course, List<Lesson>>{};
-  // update course information in editCourses
-  for (var i = 0; i < editCourses.length; i++) {
-    final courseId = editCourses[i].id;
-    currentCourseLessons[editCourses[i]] = coursesController.getCourseLessons(courseId);
-  }
-
-  var nowTime = DateTime.now();
-  // sort all entry in currentCourseLessons
-  for (var courseGroupCourse in editCourses) {
-    currentCourseLessons[courseGroupCourse]!.sort((a, b) => a.startTime.compareTo(b.startTime));
-  }
-
-  // return result
-  Map<Course, List<Lesson>> resultCourseLessons = {};
-  Map<Course, int> courseCompletedCount = {};
-  for (var courseGroupCourse in editCourses) {
-    resultCourseLessons[courseGroupCourse] = [];
-    courseCompletedCount[courseGroupCourse] = 0;
-  }
-
-  // the past shall not be modified by this function
-  for (var eachCourse in editCourses) {
-    for (var lesson in currentCourseLessons[eachCourse]!) {
-      if (lesson.status != LessonStatus.notStarted || lesson.endTime.isBefore(nowTime)) {
-        resultCourseLessons[eachCourse]!.add(lesson);
-        print("add lesson ${lesson.name}, status ${lesson.status}, endTime: ${lesson.endTime}");
-      }
-      if (lesson.status == LessonStatus.finished || lesson.status == LessonStatus.notAttended) {
-        courseCompletedCount[eachCourse] = courseCompletedCount[eachCourse]! + 1;
-      }
-    }
-  }
-
-  double generateCourseTimeUnitCost = 0;
-  bool generateMore = true;
-  DateTime courseDate = nowTime.toUtc();
-  for (var eachCourse in editCourses) {
-    if (resultCourseLessons[eachCourse]!.isEmpty) {
-      courseDate = eachCourse.timeTable.startDate.isBefore(courseDate) ? eachCourse.timeTable.startDate : courseDate;
-    }
-  }
-  courseDate = courseDate.toLocal();
-  print('reCal start from: $courseDate');
-  while (generateMore) {
-    print('try generate for day: $courseDate');
-    print('current unit : $generateCourseTimeUnitCost, ${courseGroup.restAmount - generateCourseTimeUnitCost}');
-    if (courseGroup.restAmount <= generateCourseTimeUnitCost) {
-      break;
-    }
-    generateMore = false;
-    for (var eachCourse in editCourses) {
-      // print('courseGroupCourse: ${courseGroupCourse.name}, cost: ${courseGroupCourse.pattern.value}');
-      if (courseGroup.restAmount - generateCourseTimeUnitCost < eachCourse.pattern.value ||
-          eachCourse.timeTable.daysOfWeek.isEmpty) {
-        print('cant generate ${eachCourse.name} rest amount: ${courseGroup.restAmount - generateCourseTimeUnitCost}');
-        continue;
-      }
-      generateMore = true;
-      print('each Course: ${eachCourse.name}, startDate: ${eachCourse.timeTable.startDate} | ${matchCourseTimeType(
-        eachCourse.timeTable.startDate,
-        courseDate,
-        eachCourse.timeTable.weekType,
-        eachCourse.timeTable.daysOfWeek,
-      )} | ${!eachCourse.timeTable.startDate.isAfter(courseDate)}');
-      if (matchCourseTimeType(
-            eachCourse.timeTable.startDate,
-            courseDate,
-            eachCourse.timeTable.weekType,
-            eachCourse.timeTable.daysOfWeek,
-          ) &&
-          !eachCourse.timeTable.startDate.isAfter(courseDate)) {
-        var startTime = eachCourse.timeTable.lessonStartTime
-            .toLocal()
-            .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
-            .toUtc();
-        var endTime = eachCourse.timeTable.lessonStartTime
-            .toLocal()
-            .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
-            .add(eachCourse.timeTable.duration)
-            .toUtc();
-        print("endTime: $endTime");
-        if (resultCourseLessons[eachCourse]!.isNotEmpty &&
-            resultCourseLessons[eachCourse]!.last.endTime.isAfter(endTime)) {
-          // skip duplicate generate course
-          continue;
-        }
-        Lesson? ifExistLesson =
-            resultCourseLessons[eachCourse]!.firstWhereOrNull((element) => element.endTime == endTime);
-        if (ifExistLesson != null) {
-          print('skip exist lesson ${ifExistLesson.name} at endTime $endTime');
-        } else {
-          final name = "${eachCourse.name} @ ${courseCompletedCount[eachCourse]! + 1}";
-          final status = endTime.isBefore(nowTime) ? LessonStatus.finished : LessonStatus.notStarted;
-          resultCourseLessons[eachCourse]!.add(Lesson(
-            id: currentCourseLessons[eachCourse]!.firstWhereOrNull((element) => element.startTime == startTime)?.id ??
-                const Uuid().v4(),
-            name: name,
-            user: eachCourse.user,
-            courseId: eachCourse.id,
-            startTime: startTime,
-            endTime: endTime,
-            status: status,
-          ));
-          print("generate course $name end at $endTime status: $status");
-          courseCompletedCount[eachCourse] = courseCompletedCount[eachCourse]! + 1;
-          if (endTime.isAfter(nowTime)) {
-            generateCourseTimeUnitCost += eachCourse.pattern.value;
-          }
-        }
-      }
-    }
-    courseDate = courseDate.add(const Duration(days: 1));
-  }
-
-  return resultCourseLessons;
-}
-
-List<Lesson> reCalculateLessonsForEachSingle(List<Lesson> currentLessons, Course course) {
-  var resultLessons = <Lesson>[];
-  var nowTime = DateTime.now();
-  var completedCount = 0;
-
-  currentLessons.sort((a, b) => a.startTime.compareTo(b.startTime));
-  for (var lesson in currentLessons) {
-    // the past shall not be modified by this function
-    if (lesson.status != LessonStatus.notStarted || lesson.endTime.isBefore(nowTime)) {
-      resultLessons.add(lesson);
-    }
-    if (lesson.status == LessonStatus.finished || lesson.status == LessonStatus.notAttended) {
-      completedCount++;
-    }
-  }
-
-  DateTime courseDate = (resultLessons.isEmpty ? course.timeTable.startDate : nowTime).toLocal();
-  print('reCal start from: $courseDate');
-  while (completedCount < course.pattern.value.toInt() && course.timeTable.daysOfWeek.isNotEmpty) {
-    if (matchCourseTimeType(
-      course.timeTable.startDate,
-      courseDate,
-      course.timeTable.weekType,
-      course.timeTable.daysOfWeek,
-    )) {
-      var startTime = course.timeTable.lessonStartTime
-          .toLocal()
-          .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
-          .toUtc();
-      var endTime = course.timeTable.lessonStartTime
-          .toLocal()
-          .copyWith(year: courseDate.year, month: courseDate.month, day: courseDate.day)
-          .add(course.timeTable.duration)
-          .toUtc();
-      Lesson? ifExistLesson = resultLessons.firstWhereOrNull((element) => element.endTime == endTime);
-      if (ifExistLesson != null) {
-        print('skip exist lesson ${ifExistLesson.name} at endTime $endTime');
-      } else {
-        resultLessons.add(Lesson(
-          id: currentLessons.firstWhereOrNull((element) => element.startTime == startTime)?.id ?? const Uuid().v4(),
-          name: "${course.name} @ ${completedCount + 1}",
-          user: course.user,
-          courseId: course.id,
-          startTime: startTime,
-          endTime: endTime,
-          status: endTime.isBefore(nowTime) ? LessonStatus.finished : LessonStatus.notStarted,
-        ));
-        completedCount++;
-      }
-    }
-    courseDate = courseDate.add(const Duration(days: 1));
-  }
-
-  return resultLessons;
-}
-
-bool matchCourseTimeType(DateTime startDate, DateTime targetDate, WeekType weekType, List<String> daysOfWeek) {
-  if (!daysOfWeek.contains(getDayOfWeek(targetDate))) {
-    return false;
-  }
-  if (weekType == WeekType.weekly) {
-    return true;
-  }
-  if (weekType == WeekType.biWeekly) {
-    var diff = targetDate.difference(startDate).inDays;
-    return (diff + 14) % 14 < 7;
-  }
-
-  return false;
 }
