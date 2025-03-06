@@ -1,16 +1,16 @@
-import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
-import 'package:daydayup/utils/course_arrangement.dart';
 import 'package:daydayup/utils/dangerous_zone.dart';
 import 'package:daydayup/utils/double_click.dart';
+import 'package:daydayup/utils/lesson_preview.dart';
 import 'package:daydayup/utils/status_picker.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
 import 'package:daydayup/utils/view_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class EditLessonPage extends StatelessWidget {
@@ -80,23 +80,14 @@ class _EditLessonInner extends StatefulWidget {
 class __EditLessonInnerState extends State<_EditLessonInner> {
   final coursesController = Get.find<CoursesController>();
   final settingController = Get.find<SettingController>();
-  late final lessonOriginalStatus = widget.lesson.status;
 
   late Lesson editLesson;
   late final Course thisCourse;
 
-  late final List<Lesson> currentLessons = coursesController.getCourseLessons(widget.lesson.courseId);
-  List<Lesson> editLessons = [];
-  final RxMap<Course, List<Lesson>> expectedLessonsMap = <Course, List<Lesson>>{}.obs;
-  final RxMap<Course, List<Lesson>> createNewViewLessonsMap = <Course, List<Lesson>>{}.obs;
-
-  final RxBool viewCurrentFutureLessons = true.obs;
-  final RxBool viewExpectedFutureLessons = false.obs;
-
   @override
   void initState() {
     editLesson = widget.lesson.clone();
-    editLessons = currentLessons.map((e) => e.clone()).toList();
+    // editLessons = currentLessons.map((e) => e.clone()).toList();
     thisCourse = coursesController.getCourse(editLesson.courseId);
     super.initState();
   }
@@ -123,18 +114,9 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
         StatusPicker(
           status: editLesson.status,
           onChange: (value) {
-            if (value == lessonOriginalStatus) {
-              print('status not changed, skip reCalculateLessons');
-              setState(() {
-                editLesson.status = value;
-                viewCurrentFutureLessons.value = true;
-                viewExpectedFutureLessons.value = false;
-              });
-              return;
-            }
+            // editLesson.status = value;
             setState(() {
               editLesson.status = value;
-              tryCalculateExpectedLessons();
             });
           },
         ),
@@ -144,68 +126,69 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
 
         // 时间信息
         Align(alignment: Alignment.topLeft, child: Text('时间信息')),
-        TimePickerWidget(
-          timeTitle: TimeTitleEnum.lessonStartDateTime,
-          initialValue: editLesson.startTime,
-          onChange: (value) {
-            setState(() {
-              editLesson.startTime = value;
-              editLesson.endTime = value.add(coursesController.getCourse(editLesson.courseId).timeTable.duration);
-            });
-          },
+        TimeViewWidget(
+          title: TimeTitleEnumWrapper(TimeTitleEnum.lessonStartDateTime),
+          value: editLesson.startTime,
+          formatter: DateFormat.yMd().add_jm(),
         ),
-        TimePickerWidget(
-          timeTitle: TimeTitleEnum.lessonEndDateTime,
-          initialValue: editLesson.endTime,
-          onChange: (value) {
-            editLesson.endTime = value;
-          },
+        TimeViewWidget(
+          title: TimeTitleEnumWrapper(TimeTitleEnum.lessonEndDateTime),
+          value: editLesson.endTime,
+          formatter: DateFormat.yMd().add_jm(),
         ),
+        // todo not allow to change start time and end time temporarily
+        // TimePickerWidget(
+        //   timeTitle: TimeTitleEnum.lessonStartDateTime,
+        //   initialValue: editLesson.startTime,
+        //   onChange: (value) {
+        //     setState(() {
+        //       editLesson.startTime = value;
+        //       editLesson.endTime = value.add(coursesController.getCourse(editLesson.courseId).timeTable.duration);
+        //     });
+        //   },
+        // ),
+        // TimePickerWidget(
+        //   timeTitle: TimeTitleEnum.lessonEndDateTime,
+        //   initialValue: editLesson.endTime,
+        //   onChange: (value) {
+        //     editLesson.endTime = value;
+        //   },
+        // ),
         Divider(),
 
         // 保存
         ElevatedButton(
           onPressed: () async {
-            if (validateUserInput(showError: true)) {
-              await tryCalculateExpectedLessons();
-
-              // await coursesController.upsertLesson(editLesson);
-              for (var course in expectedLessonsMap.keys) {
-                await coursesController.upsertCourse(course, expectedLessonsMap[course]!);
+            var check = validateUserInputResponse();
+            if (check.isNotEmpty) {
+              Get.snackbar('错误', check);
+            } else {
+              if (viewExpectedLesson(thisCourse, null, widget.lesson, editLesson)) {
+                var expectedLessonsMap = reCalCourseLessonsMap(thisCourse, null, widget.lesson, editLesson);
+                for (var entry in expectedLessonsMap.entries) {
+                  await coursesController.upsertCourse(entry.key, entry.value);
+                }
               }
-
               Get.offAllNamed('/');
-              Get.toNamed('/view-lesson', arguments: [editLesson.courseId, editLesson.id]);
+              if (coursesController
+                  .getCourseLessons(editLesson.courseId)
+                  .any((element) => element.id == editLesson.id)) {
+                Get.toNamed('/view-lesson', arguments: [editLesson.courseId, editLesson.id]);
+              }
             }
           },
           child: const Text('保存'),
         ),
         Divider(),
-
-        // 课程影响预览
-        // 修改前课程安排预览（修改后不再可见）
-        if (viewCurrentFutureLessons.value)
-          DynamicLessonList(
-            title: "该课堂排课",
-            course: thisCourse,
-            lessons: currentLessons.where((element) => element.status == LessonStatus.notStarted).toList(),
+        if (!widget.isCreateNew)
+          LessonPreview(
+            thisCourse: thisCourse,
+            thisLesson: widget.lesson,
+            editedLesson: editLesson,
+            validateUserInputFunc: validateUserInputResponse,
           ),
-        if (viewExpectedFutureLessons.value)
-          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name == thisCourse.name))
-            DynamicLessonList(
-              title: "修改后该课堂排课 ${entry.key.name}",
-              course: entry.key,
-              lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
-              titleColor: Colors.red[300],
-            ),
-        if (viewExpectedFutureLessons.value && thisCourse.pattern.type == PatternType.costClassTimeUnit)
-          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name != thisCourse.name))
-            DynamicLessonList(
-              title: "修改后其它课堂排课 ${entry.key.name}",
-              course: entry.key,
-              lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
-              titleColor: Colors.red[300],
-            ),
+
+        Divider(),
 
         if (!widget.isCreateNew)
           DangerousZone(children: [
@@ -297,79 +280,23 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
     );
   }
 
-  bool validateUserInput({bool showError = false}) {
+  String validateUserInputResponse() {
     final coursesController = Get.find<CoursesController>();
     final now = DateTime.now();
     if (editLesson.status == LessonStatus.notStarted && editLesson.endTime.isBefore(now)) {
-      if (showError) Get.snackbar('错误', '课程时间已过，状态不能为未完成');
-      return false;
+      return '课程时间已过，状态不能为未完成';
     }
     if (editLesson.startTime.isAfter(editLesson.endTime)) {
-      if (showError) Get.snackbar('错误', '开始时间不能晚于结束时间');
-      return false;
+      return '开始时间不能晚于结束时间';
     }
     if (editLesson.name.isEmpty) {
-      if (showError) Get.snackbar('错误', '课程名称不能为空');
-      return false;
+      return '课程名称不能为空';
     }
     if (editLesson.id.isEmpty ||
         coursesController.courses.firstWhereOrNull((element) => element.id == editLesson.courseId) == null) {
-      if (showError) Get.snackbar('错误', '课程ID不能为空');
-      return false;
+      return '课程ID不能为空';
     }
 
-    return true;
-  }
-
-  void reCalculateLessons(LessonStatus newStatus, LessonStatus oldStatus) {
-    if (newStatus == oldStatus) {
-      print('status not changed, skip reCalculateLessons');
-      viewCurrentFutureLessons.value = true;
-      viewExpectedFutureLessons.value = false;
-      return;
-    }
-
-    switch (thisCourse.pattern.type) {
-      case PatternType.eachSingleLesson:
-        editLessons.where((element) => element.id == editLesson.id).first.status = newStatus;
-        expectedLessonsMap.value = {thisCourse: reCalculateLessonsForEachSingle(editLessons, thisCourse)};
-        print('reCalculateLessonsForEachSingle: ${expectedLessonsMap[thisCourse]}');
-        break;
-      case PatternType.costClassTimeUnit:
-        expectedLessonsMap.value = reCalculateLessonsForTimeUnit(thisCourse);
-        break;
-    }
-
-    viewCurrentFutureLessons.value = false;
-    viewExpectedFutureLessons.value = true;
-  }
-
-  Future<void> tryCalculateExpectedLessons() async {
-    if (!validateUserInput()) return;
-    switch (thisCourse.pattern.type) {
-      case PatternType.eachSingleLesson:
-        editLessons.where((element) => element.id == editLesson.id).first.status = editLesson.status;
-        expectedLessonsMap.value = {thisCourse: reCalculateLessonsForEachSingle(editLessons, thisCourse)};
-        print('reCalculateLessonsForEachSingle: ${expectedLessonsMap[thisCourse]}');
-        break;
-      case PatternType.costClassTimeUnit:
-        double deltaTimeUnit = 0;
-        if ((lessonOriginalStatus == LessonStatus.notStarted || lessonOriginalStatus == LessonStatus.canceled) &&
-            (editLesson.status == LessonStatus.finished || editLesson.status == LessonStatus.notAttended)) {
-          deltaTimeUnit = thisCourse.pattern.value;
-        }
-        if ((lessonOriginalStatus == LessonStatus.finished || lessonOriginalStatus == LessonStatus.notAttended) &&
-            (editLesson.status == LessonStatus.notStarted || editLesson.status == LessonStatus.canceled)) {
-          deltaTimeUnit = -thisCourse.pattern.value;
-        }
-        expectedLessonsMap.value =
-            reCalculateLessonsForTimeUnit(thisCourse, editLesson: editLesson, deltaTimeUnit: deltaTimeUnit);
-        break;
-    }
-
-    setState(() {
-      viewCurrentFutureLessons.value = false;
-      viewExpectedFutureLessons.value = true;
-    });
+    return '';
   }
 }
