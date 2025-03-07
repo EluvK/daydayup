@@ -83,7 +83,7 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
   final settingController = Get.find<SettingController>();
 
   late Lesson editLesson;
-  late final Course thisCourse;
+  late Course thisCourse;
 
   @override
   void initState() {
@@ -159,13 +159,16 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
               Get.snackbar('错误', check);
             } else {
               if (viewExpectedLesson(thisCourse, null, widget.lesson, editLesson)) {
-                var expectedLessonsMap = reCalCourseLessonsMap(
-                  thisCourse,
-                  null,
-                  widget.lesson,
-                  editLesson,
-                  widget.isCreateNew,
-                );
+                Map<Course, List<Lesson>> expectedLessonsMap;
+                try {
+                  expectedLessonsMap = reCalCourseLessonsMap(thisCourse, null, editLesson).getOrThrow();
+                } on CalculateError {
+                  Get.snackbar('错误', '生成课程出错');
+                  return;
+                } catch (e) {
+                  Get.snackbar('错误', '生成课程出错 - 未知');
+                  return;
+                }
                 for (var entry in expectedLessonsMap.entries) {
                   await coursesController.upsertCourse(entry.key, entry.value);
                 }
@@ -183,6 +186,7 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
         Divider(),
         LessonPreview(
           thisCourse: thisCourse,
+          editedCourse: null,
           thisLesson: widget.lesson,
           editedLesson: editLesson,
           validateUserInputFunc: validateUserInputResponse,
@@ -256,6 +260,7 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
                     setState(() {
                       if (value != null) {
                         var course = coursesController.getCourse(value);
+                        thisCourse = course;
                         var now = DateTime.now();
                         var startTime = course.timeTable.lessonStartTime
                             .toLocal()

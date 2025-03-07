@@ -45,7 +45,7 @@ class _EditCourseGroupState extends State<EditCourseGroup> {
         id: const Uuid().v4(),
         name: '',
         description: '',
-        restAmount: 0,
+        totalAmount: 0,
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),
@@ -108,7 +108,7 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
         ),
         TextViewWidget(
           title: NumberInputEnumWrapper(NumberInputEnum.courseGroupTimeUnit),
-          value: editedCourseGroup.restAmount.toString(),
+          value: editedCourseGroup.totalAmount.toString(),
         ),
         SizedBox(height: 10),
         ElevatedButton(

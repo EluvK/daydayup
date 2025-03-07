@@ -4,6 +4,7 @@ import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/course_arrangement.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+export 'package:daydayup/utils/course_arrangement.dart' show CalculateError;
 
 class LessonPreview extends StatelessWidget {
   LessonPreview({
@@ -45,7 +46,26 @@ class LessonPreview extends StatelessWidget {
     print('build preview viewExpected $viewExpected');
 
     if (viewExpected) {
-      expectedLessonsMap = reCalCourseLessonsMap(thisCourse, editedCourse, thisLesson, editedLesson, isCreateNew);
+      try {
+        expectedLessonsMap = reCalCourseLessonsMap(thisCourse, editedCourse, editedLesson).getOrThrow();
+      } on CalculateError catch (e) {
+        switch (e) {
+          case CalculateError.notEnoughAmount:
+            return Center(
+                child: Text(
+              "❌ 排课失败！\n课时似乎不够啦。\n对于手动修改过的课程，是不会覆盖的噢。",
+              style: TextStyle(
+                color: Color(0xFF840016),
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.9,
+              ),
+            ));
+        }
+      } catch (e) {
+        return Center(child: Text("未知错误"));
+      }
+
       print('generate expectedLessonsMap length ${expectedLessonsMap.length}');
     }
 
@@ -75,8 +95,7 @@ class LessonPreview extends StatelessWidget {
               lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
               titleColor: Colors.red[300],
             ),
-
-        if (viewExpected && isCreateNew)
+        if (viewExpected && isCreateNew && editedCourse != null)
           for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.id == thisCourse.id))
             DynamicLessonList(
               title: "新课堂归档 ${entry.key.name}",
@@ -84,7 +103,16 @@ class LessonPreview extends StatelessWidget {
               lessons: entry.value.where((lesson) => lesson.status == LessonStatus.archived).toList(),
               titleColor: Colors.green[300],
             ),
-
+        if (viewExpected)
+          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.id == thisCourse.id))
+            DynamicLessonList(
+              title: "该课堂历史记录 ${entry.key.name}",
+              course: entry.key,
+              lessons: entry.value
+                  .where((lesson) => lesson.status != LessonStatus.notStarted && lesson.status != LessonStatus.archived)
+                  .toList(),
+              titleColor: Colors.green[300],
+            ),
         if (viewExpected && thisCourse.pattern.type == PatternType.costClassTimeUnit)
           for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.id != thisCourse.id))
             DynamicLessonList(
@@ -114,47 +142,16 @@ bool viewExpectedLesson(Course thisCourse, Course? editedCourse, Lesson? thisLes
   return false;
 }
 
-Map<Course, List<Lesson>> reCalCourseLessonsMap(
+CalResult<CourseLessonMap> reCalCourseLessonsMap(
   Course thisCourse,
   Course? editedCourse,
-  Lesson? thisLesson,
   Lesson? editedLesson,
-  bool isCreateNew,
 ) {
-  if (isCreateNew) {
-    print('reCalCourseLessonsMap isCreateNew');
-    Course course = editedCourse ?? thisCourse;
-    Map<Course, List<Lesson>> newLessonsMap;
-    switch (course.pattern.type) {
-      case PatternType.eachSingleLesson:
-        newLessonsMap = {thisCourse: reCalculateLessonsForEachSingle(course, editedLesson)};
-        break;
-      case PatternType.costClassTimeUnit:
-        // todo zero not right at here when create new lessons
-        newLessonsMap = reCalculateLessonsForTimeUnit(course, deltaTimeUnit: 0, editLesson: editedLesson);
-        break;
-    }
-    return newLessonsMap;
-  }
-
-  print('reCalCourseLessonsMap not isCreateNew');
   switch (thisCourse.pattern.type) {
     case PatternType.eachSingleLesson:
-      return {editedCourse ?? thisCourse: reCalculateLessonsForEachSingle(editedCourse ?? thisCourse, editedLesson)};
+      return reCalculateLessonsForEachSingle(editedCourse ?? thisCourse, editedLesson);
 
     case PatternType.costClassTimeUnit:
-      double deltaTimeUnit = 0;
-      if (thisLesson != null && editedLesson != null) {
-        if ((thisLesson.status == LessonStatus.notStarted || thisLesson.status == LessonStatus.canceled) &&
-            (editedLesson.status == LessonStatus.finished || editedLesson.status == LessonStatus.notAttended)) {
-          deltaTimeUnit = thisCourse.pattern.value;
-        }
-        if ((thisLesson.status == LessonStatus.finished || thisLesson.status == LessonStatus.notAttended) &&
-            (editedLesson.status == LessonStatus.notStarted || editedLesson.status == LessonStatus.canceled)) {
-          deltaTimeUnit = -thisCourse.pattern.value;
-        }
-      }
-      print('deltaTimeUnit $deltaTimeUnit');
-      return reCalculateLessonsForTimeUnit(thisCourse, editLesson: editedLesson, deltaTimeUnit: deltaTimeUnit);
+      return reCalculateLessonsForTimeUnit(editedCourse ?? thisCourse, editedLesson);
   }
 }

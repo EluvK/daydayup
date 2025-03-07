@@ -30,6 +30,10 @@ class LessonTile extends StatelessWidget {
       time =
           "${DateFormat.yMd().format(lesson.startTime.toLocal())},${DateFormat.E().format(lesson.startTime.toLocal())},$time";
     }
+    if (lesson.endTime != lesson.originalEndTime) {
+      time = "$time🛠️";
+    }
+
     if (course.description.isNotEmpty) {
       time = "$time\n${course.description}";
     }

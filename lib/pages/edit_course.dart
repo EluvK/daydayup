@@ -1,4 +1,3 @@
-import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
@@ -89,8 +88,6 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
   final coursesController = Get.find<CoursesController>();
 
   late Course editCourse;
-
-  final RxMap<Course, List<Lesson>> createNewViewLessonsMap = <Course, List<Lesson>>{}.obs;
 
   @override
   void initState() {
@@ -239,13 +236,16 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
             } else {
               if (viewExpectedLesson(widget.course, editCourse, null, null)) {
                 print('on save: editCourse:$editCourse');
-                var expectedLessonsMap = reCalCourseLessonsMap(
-                  widget.course,
-                  editCourse,
-                  null,
-                  null,
-                  widget.isCreateNew,
-                );
+                Map<Course, List<Lesson>> expectedLessonsMap;
+                try {
+                  expectedLessonsMap = reCalCourseLessonsMap(widget.course, editCourse, null).getOrThrow();
+                } on CalculateError {
+                  Get.snackbar('错误', '生成课程出错');
+                  return;
+                } catch (e) {
+                  Get.snackbar('错误', '生成课程出错 - 未知');
+                  return;
+                }
                 for (var entry in expectedLessonsMap.entries) {
                   print('on insert db: ${entry.key} ${entry.value.length}');
                   await coursesController.upsertCourse(entry.key, entry.value);
@@ -259,30 +259,11 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
         ),
         Divider(),
 
-        // 新课程预览 - self
-        if (widget.isCreateNew)
-          for (var entry in createNewViewLessonsMap.entries.where((entry) => entry.key.name == editCourse.name))
-            DynamicLessonList(
-              title: "该课堂预览 ${entry.key.name}",
-              course: entry.key,
-              lessons: entry.value,
-              titleColor: Colors.red[300],
-              editable: false,
-            ),
-        // 新课程预览 - others (if any in the same group)
-        if (widget.isCreateNew && editCourse.pattern.type == PatternType.costClassTimeUnit)
-          for (var entry in createNewViewLessonsMap.entries.where((entry) => entry.key.name != editCourse.name))
-            DynamicLessonList(
-              title: "组内其它课堂预览 ${entry.key.name}",
-              course: entry.key,
-              lessons: entry.value,
-              titleColor: Colors.red[300],
-              editable: false,
-            ),
-
         LessonPreview(
           thisCourse: widget.isCreateNew ? editCourse : widget.course,
           editedCourse: editCourse,
+          thisLesson: null,
+          editedLesson: null,
           validateUserInputFunc: validateUserInputResponse,
           isCreateNew: widget.isCreateNew,
         ),

@@ -240,7 +240,7 @@ extension NumberInputEnumExtension on NumberInputEnum {
       case NumberInputEnum.courseGroupBillAdd:
         return '补充课时';
       case NumberInputEnum.courseGroupTimeUnit:
-        return '剩余课时';
+        return '课程组总课时';
     }
   }
 

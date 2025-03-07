@@ -10,14 +10,14 @@ CourseGroup _$CourseGroupFromJson(Map<String, dynamic> json) => CourseGroup(
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String,
-      restAmount: (json['restAmount'] as num).toDouble(),
+      totalAmount: (json['totalAmount'] as num).toDouble(),
     )..billIds = const ListStringConverter().fromJson(json['billIds'] as String);
 
 Map<String, dynamic> _$CourseGroupToJson(CourseGroup instance) => <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
       'description': instance.description,
-      'restAmount': instance.restAmount,
+      'totalAmount': instance.totalAmount,
       'billIds': const ListStringConverter().toJson(instance.billIds),
     };
 

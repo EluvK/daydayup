@@ -83,8 +83,8 @@ class CoursesController extends GetxController {
       }
       for (final entry in courseGroupCosts.entries) {
         final courseGroup = getCourseGroup(entry.key);
-        courseGroup.restAmount -= entry.value;
-        await upsertCourseGroup(courseGroup);
+        // courseGroup.totalAmount -= entry.value;
+        // await upsertCourseGroup(courseGroup);
         lessonSummaries += '\n- ${courseGroup.name} 扣除课时: ${entry.value}';
       }
       if (count > 0) {
@@ -127,7 +127,7 @@ class CoursesController extends GetxController {
   Future<void> addCourseGroupBill(CourseGroupBill bill) async {
     final CourseGroup courseGroup = getCourseGroup(bill.groupId);
     // courseGroup.bills.add(bill);
-    courseGroup.restAmount += bill.amount;
+    courseGroup.totalAmount += bill.amount;
     await upsertCourseGroup(courseGroup);
     await DataBase().upsertCourseGroupBill(bill);
   }
@@ -138,7 +138,7 @@ class CoursesController extends GetxController {
 
   Future<void> deleteCourseGroupBill(CourseGroupBill bill) async {
     final CourseGroup courseGroup = getCourseGroup(bill.groupId);
-    courseGroup.restAmount -= bill.amount;
+    courseGroup.totalAmount -= bill.amount;
     await upsertCourseGroup(courseGroup);
     await DataBase().deleteCourseGroupBill(bill.id);
   }
@@ -277,41 +277,48 @@ class CoursesController extends GetxController {
 class CourseStatus {
   int completed;
   int notAttended;
-  int total;
-  double unitCost;
+  int totalClassCount;
+  double unitCostEach;
+  double totalCost;
 
   CourseStatus({
     required this.completed,
     required this.notAttended,
-    required this.total,
-    this.unitCost = 0,
+    required this.totalClassCount,
+    this.unitCostEach = 0,
+    this.totalCost = 0,
   });
 
   factory CourseStatus.fromCourses(Course course, List<Lesson> lessons) {
+    final completed = lessons.where((lesson) => lesson.status == LessonStatus.finished).length;
+    final notAttended = lessons.where((lesson) => lesson.status == LessonStatus.notAttended).length;
     switch (course.pattern.type) {
       case PatternType.costClassTimeUnit:
         return CourseStatus(
-          completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
-          notAttended: lessons.where((lesson) => lesson.status == LessonStatus.notAttended).length,
-          total: -1,
-          unitCost: course.pattern.value,
+          completed: completed,
+          notAttended: notAttended,
+          totalClassCount: -1,
+          unitCostEach: course.pattern.value,
+          totalCost: (completed + notAttended) * course.pattern.value,
         );
       case PatternType.eachSingleLesson:
         return CourseStatus(
-          completed: lessons.where((lesson) => lesson.status == LessonStatus.finished).length,
-          notAttended: lessons.where((lesson) => lesson.status == LessonStatus.notAttended).length,
-          total: course.pattern.value.toInt(),
+          completed: completed,
+          notAttended: notAttended,
+          totalClassCount: course.pattern.value.toInt(),
+          unitCostEach: 1, // 1 for each lesson, not used anyway.
+          totalCost: (completed + notAttended) * 1,
         );
     }
   }
 
   String fmt() {
     String optionalNotAttended = notAttended > 0 ? '$notAttended❎' : '';
-    switch (total) {
+    switch (totalClassCount) {
       case -1:
-        return '$optionalNotAttended$completed✅($unitCost课时)';
+        return '$optionalNotAttended$completed✅(*$unitCostEach)';
       default:
-        return '$optionalNotAttended$completed✅/$total';
+        return '$optionalNotAttended$completed✅/$totalClassCount';
     }
   }
 }

@@ -56,7 +56,7 @@ class _ViewCourseGroupState extends State<ViewCourseGroup> {
         TextViewWidget(title: InputTitleEnumWrapper(InputTitleEnum.anyDescription), value: courseGroup.description),
         TextViewWidget(
           title: NumberInputEnumWrapper(NumberInputEnum.courseGroupTimeUnit),
-          value: courseGroup.restAmount.toString(),
+          value: courseGroup.totalAmount.toString(),
         ),
         Divider(),
         Align(alignment: Alignment.centerLeft, child: Text('课程列表')),

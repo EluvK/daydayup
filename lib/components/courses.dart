@@ -68,8 +68,8 @@ class _CoursesTableState extends State<CoursesTable> {
       children: [
         Expanded(
           child: Obx(() {
-            var courses = coursesController.courses;
-            var courseGroups = coursesController.courseGroups;
+            final courses = coursesController.courses;
+            final courseGroups = coursesController.courseGroups;
 
             final Map<String, List<Course>> groupCourses = {};
             List<Course> noGroupCourses = [];
@@ -139,11 +139,14 @@ class _CoursesTableState extends State<CoursesTable> {
   }
 
   Widget courseGroupWidget(CourseGroup courseGroup, List<Course> courses) {
+    var sumUsedAmount = courses.fold(
+        0.0, (previousValue, element) => previousValue + coursesController.courseStatus[element.id]!.totalCost);
     var title = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(courseGroup.name),
-        Text("剩余 ${courseGroup.restAmount.toString()} 课时", style: TextStyle(color: Colors.blueGrey, fontSize: 12)),
+        Text("剩余 ${(courseGroup.totalAmount - sumUsedAmount).toString()} 课时",
+            style: TextStyle(color: Colors.blueGrey, fontSize: 12)),
       ],
     );
     return ExpansionTile(

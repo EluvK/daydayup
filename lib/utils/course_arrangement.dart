@@ -3,14 +3,23 @@ import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/day_of_week_picker.dart';
 import 'package:daydayup/utils/utils.dart';
 import 'package:get/get.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
+
+typedef CourseLessonMap = Map<Course, List<Lesson>>;
+
+enum CalculateError {
+  notEnoughAmount,
+}
+
+typedef CalResult<CourseLessonMap> = Result<Map<Course, List<Lesson>>, CalculateError>;
 
 /// 根据传入的当前课程信息，重新推导所有 lesson
 ///
 /// 场景1：修改课程信息后，重新计算课程安排，此时 (mut course, null)
 ///
 /// 场景2：调整某一节课、新建课程后，重新计算课程安排，此时 (course, mut lesson)
-Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? editLesson, double deltaTimeUnit = 0}) {
+CalResult<CourseLessonMap> reCalculateLessonsForTimeUnit(Course course, Lesson? editLesson) {
   var coursesController = Get.find<CoursesController>();
   final courseGroupCourses = coursesController.getCourseGroupCourses(course.groupId!);
   final List<Course> editCourses = courseGroupCourses.map((e) => e.clone()).toList();
@@ -53,7 +62,7 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? 
     // courseCompletedCount[courseGroupCourse] = 0;
   }
 
-  double generateCourseTimeUnitCost = deltaTimeUnit;
+  double generateCourseTimeUnitCost = 0;
 
   // the past shall not be modified by this function
   for (var eachCourse in editCourses) {
@@ -74,7 +83,11 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? 
     }
   }
 
-  // todo if generateCourseTimeUnitCost > courseGroup.restAmount, might be error
+  print('========== current unit : $generateCourseTimeUnitCost, ${courseGroup.totalAmount} ==========');
+  if (generateCourseTimeUnitCost >= courseGroup.totalAmount) {
+    print('generateCourseTimeUnitCost >= courseGroup.restAmount');
+    return Failure(CalculateError.notEnoughAmount);
+  }
 
   bool generateMore = true;
   DateTime courseDate = nowTime.toUtc();
@@ -85,16 +98,16 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? 
   print('reCal start from: $courseDate');
   while (generateMore) {
     print('try generate for day: $courseDate');
-    print('current unit : $generateCourseTimeUnitCost, ${courseGroup.restAmount - generateCourseTimeUnitCost}');
-    if (courseGroup.restAmount <= generateCourseTimeUnitCost) {
+    print('current unit : $generateCourseTimeUnitCost, ${courseGroup.totalAmount - generateCourseTimeUnitCost}');
+    if (courseGroup.totalAmount <= generateCourseTimeUnitCost) {
       break;
     }
     generateMore = false;
     for (var eachCourse in editCourses) {
       // print('courseGroupCourse: ${courseGroupCourse.name}, cost: ${courseGroupCourse.pattern.value}');
-      if (courseGroup.restAmount - generateCourseTimeUnitCost < eachCourse.pattern.value ||
+      if (courseGroup.totalAmount - generateCourseTimeUnitCost < eachCourse.pattern.value ||
           eachCourse.timeTable.daysOfWeek.isEmpty) {
-        print('cant generate ${eachCourse.name} rest amount: ${courseGroup.restAmount - generateCourseTimeUnitCost}');
+        print('cant generate ${eachCourse.name} rest amount: ${courseGroup.totalAmount - generateCourseTimeUnitCost}');
         continue;
       }
       generateMore = true;
@@ -159,7 +172,7 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? 
     print(
         'genresult: ${eachCourse.name} ${resultCourseLessons[eachCourse]!.$1.length} ${resultCourseLessons[eachCourse]!.$2.length}');
   }
-  return resultCourseLessons.map((key, value) => MapEntry(key, value.$1 + value.$2));
+  return Success(resultCourseLessons.map((key, value) => MapEntry(key, value.$1 + value.$2)));
 }
 
 /// 根据传入的当前 lessons，和 course 重新推导所有 lesson
@@ -167,7 +180,7 @@ Map<Course, List<Lesson>> reCalculateLessonsForTimeUnit(Course course, {Lesson? 
 /// 场景1：修改课程信息后，重新计算课程安排，此时 (mut course, null)
 ///
 /// 场景2：调整某一节课、新建课程后，重新计算课程安排，此时 (course, mut editlesson)
-List<Lesson> reCalculateLessonsForEachSingle(Course course, Lesson? editLesson) {
+CalResult<CourseLessonMap> reCalculateLessonsForEachSingle(final Course course, Lesson? editLesson) {
   var notBilledLessons = <Lesson>[];
   var billedLessons = <Lesson>[];
   var nowTime = DateTime.now();
@@ -199,7 +212,11 @@ List<Lesson> reCalculateLessonsForEachSingle(Course course, Lesson? editLesson) 
     }
   }
 
-  // todo if billedLessons.length > course.pattern.value, might be error
+  print('========== current unit : ${billedLessons.length}, ${course.pattern.value} ==========');
+  if (billedLessons.length >= course.pattern.value) {
+    print('billedLessons.length >= course.pattern.value');
+    return Failure(CalculateError.notEnoughAmount);
+  }
 
   DateTime courseDate = (billedLessons.isEmpty
           ? course.timeTable.startDate
@@ -245,7 +262,7 @@ List<Lesson> reCalculateLessonsForEachSingle(Course course, Lesson? editLesson) 
     courseDate = courseDate.add(const Duration(days: 1));
   }
 
-  return notBilledLessons + billedLessons;
+  return Success({course: notBilledLessons + billedLessons});
 }
 
 bool matchCourseTimeType(DateTime startDate, DateTime targetDate, WeekType weekType, List<String> daysOfWeek) {
