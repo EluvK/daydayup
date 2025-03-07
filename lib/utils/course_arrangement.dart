@@ -84,8 +84,8 @@ CalResult<CourseLessonMap> reCalculateLessonsForTimeUnit(Course course, Lesson? 
   }
 
   print('========== current unit : $generateCourseTimeUnitCost, ${courseGroup.totalAmount} ==========');
-  if (generateCourseTimeUnitCost >= courseGroup.totalAmount) {
-    print('generateCourseTimeUnitCost >= courseGroup.restAmount');
+  if (generateCourseTimeUnitCost > courseGroup.totalAmount) {
+    print('generateCourseTimeUnitCost > courseGroup.restAmount');
     return Failure(CalculateError.notEnoughAmount);
   }
 
@@ -213,8 +213,8 @@ CalResult<CourseLessonMap> reCalculateLessonsForEachSingle(final Course course, 
   }
 
   print('========== current unit : ${billedLessons.length}, ${course.pattern.value} ==========');
-  if (billedLessons.length >= course.pattern.value) {
-    print('billedLessons.length >= course.pattern.value');
+  if (billedLessons.length > course.pattern.value) {
+    print('billedLessons.length > course.pattern.value');
     return Failure(CalculateError.notEnoughAmount);
   }
 
