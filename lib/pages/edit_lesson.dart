@@ -10,7 +10,6 @@ import 'package:daydayup/utils/time_picker.dart';
 import 'package:daydayup/utils/view_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class EditLessonPage extends StatelessWidget {
@@ -46,13 +45,15 @@ class _EditLessonState extends State<EditLesson> {
   Widget build(BuildContext context) {
     if (widget.lessonId == null || widget.courseId == null) {
       Course? course = coursesController.courses.firstOrNull;
+      var now = DateTime.now();
       var lesson = Lesson(
         courseId: course?.id ?? '',
         id: const Uuid().v4(),
         name: "${course?.name ?? ''} @ 手动添加",
         user: settingController.getDefaultUser(),
-        startTime: DateTime.now().subtract(Duration(hours: 1)),
-        endTime: DateTime.now(),
+        startTime: now.subtract(course?.timeTable.duration ?? Duration(hours: 1)),
+        endTime: now,
+        originalEndTime: now,
         status: LessonStatus.finished,
       );
 
@@ -109,15 +110,16 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
           onChanged: (value) {
             editLesson.name = value;
           },
+          onFocusChange: (isFocus) {
+            if (!isFocus) setState(() {});
+          },
           initialValue: editLesson.name,
         ),
         StatusPicker(
           status: editLesson.status,
           onChange: (value) {
-            // editLesson.status = value;
-            setState(() {
-              editLesson.status = value;
-            });
+            editLesson.status = value;
+            setState(() {});
           },
         ),
 
@@ -126,34 +128,27 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
 
         // 时间信息
         Align(alignment: Alignment.topLeft, child: Text('时间信息')),
-        TimeViewWidget(
-          title: TimeTitleEnumWrapper(TimeTitleEnum.lessonStartDateTime),
-          value: editLesson.startTime,
-          formatter: DateFormat.yMd().add_jm(),
+        TimePickerWidget(
+          timeTitle: TimeTitleEnum.lessonStartDateTime,
+          initialValue: editLesson.startTime,
+          onChange: (value) {
+            setState(() {
+              editLesson.startTime = value;
+              editLesson.endTime = value.add(coursesController.getCourse(editLesson.courseId).timeTable.duration);
+              if (widget.isCreateNew) editLesson.originalEndTime = value;
+            });
+          },
         ),
-        TimeViewWidget(
-          title: TimeTitleEnumWrapper(TimeTitleEnum.lessonEndDateTime),
-          value: editLesson.endTime,
-          formatter: DateFormat.yMd().add_jm(),
+        TimePickerWidget(
+          timeTitle: TimeTitleEnum.lessonEndDateTime,
+          initialValue: editLesson.endTime,
+          onChange: (value) {
+            editLesson.endTime = value;
+            if (widget.isCreateNew) editLesson.originalEndTime = value;
+            editLesson.startTime = value.subtract(coursesController.getCourse(editLesson.courseId).timeTable.duration);
+            setState(() {});
+          },
         ),
-        // todo not allow to change start time and end time temporarily
-        // TimePickerWidget(
-        //   timeTitle: TimeTitleEnum.lessonStartDateTime,
-        //   initialValue: editLesson.startTime,
-        //   onChange: (value) {
-        //     setState(() {
-        //       editLesson.startTime = value;
-        //       editLesson.endTime = value.add(coursesController.getCourse(editLesson.courseId).timeTable.duration);
-        //     });
-        //   },
-        // ),
-        // TimePickerWidget(
-        //   timeTitle: TimeTitleEnum.lessonEndDateTime,
-        //   initialValue: editLesson.endTime,
-        //   onChange: (value) {
-        //     editLesson.endTime = value;
-        //   },
-        // ),
         Divider(),
 
         // 保存
@@ -164,7 +159,13 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
               Get.snackbar('错误', check);
             } else {
               if (viewExpectedLesson(thisCourse, null, widget.lesson, editLesson)) {
-                var expectedLessonsMap = reCalCourseLessonsMap(thisCourse, null, widget.lesson, editLesson);
+                var expectedLessonsMap = reCalCourseLessonsMap(
+                  thisCourse,
+                  null,
+                  widget.lesson,
+                  editLesson,
+                  widget.isCreateNew,
+                );
                 for (var entry in expectedLessonsMap.entries) {
                   await coursesController.upsertCourse(entry.key, entry.value);
                 }
@@ -180,13 +181,13 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
           child: const Text('保存'),
         ),
         Divider(),
-        if (!widget.isCreateNew)
-          LessonPreview(
-            thisCourse: thisCourse,
-            thisLesson: widget.lesson,
-            editedLesson: editLesson,
-            validateUserInputFunc: validateUserInputResponse,
-          ),
+        LessonPreview(
+          thisCourse: thisCourse,
+          thisLesson: widget.lesson,
+          editedLesson: editLesson,
+          validateUserInputFunc: validateUserInputResponse,
+          isCreateNew: widget.isCreateNew,
+        ),
 
         Divider(),
 

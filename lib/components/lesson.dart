@@ -134,6 +134,10 @@ class _DynamicLessonListState extends State<DynamicLessonList> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.lessons.isEmpty) {
+      print('name: ${widget.course.name} size: ${widget.lessons.length}, return empty');
+      return SizedBox.shrink();
+    }
     var title = Text(
       '${widget.title} (${widget.lessons.length})',
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -141,6 +145,7 @@ class _DynamicLessonListState extends State<DynamicLessonList> {
             color: widget.titleColor,
           ),
     );
+    print('dynamic lesson title: $title, len: ${widget.lessons.length}');
     return ExpansionTile(
       title: title,
       initiallyExpanded: true,

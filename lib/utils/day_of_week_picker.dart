@@ -2,33 +2,24 @@ import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/time_picker.dart';
 import 'package:flutter/material.dart';
 
-class DayOfWeekPickerWidget extends StatefulWidget {
-  const DayOfWeekPickerWidget(
-      {super.key, required this.initialWeekType, required this.initialSelectedDays, required this.onChanged});
+class DayOfWeekPickerWidget extends StatelessWidget {
+  const DayOfWeekPickerWidget({
+    super.key,
+    required this.initialWeekType,
+    required this.initialSelectedDays,
+    required this.onChanged,
+  });
 
   final WeekType initialWeekType;
   final List<String> initialSelectedDays;
   final void Function(WeekType, List<String>) onChanged;
 
   @override
-  State<DayOfWeekPickerWidget> createState() => _DayOfWeekPickerWidgetState();
-}
-
-class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
-  List<String> selectedDays = [];
-  WeekType weekType = WeekType.weekly;
-
-  final TimeTitleEnum title = TimeTitleEnum.dayOfWeek;
-
-  @override
-  void initState() {
-    selectedDays = widget.initialSelectedDays;
-    weekType = widget.initialWeekType;
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    List<String> selectedDays = initialSelectedDays;
+    WeekType weekType = initialWeekType;
+    final TimeTitleEnum title = TimeTitleEnum.dayOfWeek;
+
     return Material(
       color: Colors.transparent,
       child: Padding(
@@ -64,8 +55,7 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
                   showSelectedIcon: false,
                   onSelectionChanged: (Set<WeekType> selected) {
                     weekType = selected.first;
-                    setState(() {});
-                    widget.onChanged(weekType, selectedDays);
+                    onChanged(weekType, selectedDays);
                   },
                   style: const ButtonStyle(
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -95,8 +85,7 @@ class _DayOfWeekPickerWidgetState extends State<DayOfWeekPickerWidget> {
                         selectedDays.add(day);
                       }
                       selectedDays.sort((a, b) => daysOfWeek.indexOf(a).compareTo(daysOfWeek.indexOf(b)));
-                      setState(() {});
-                      widget.onChanged(weekType, selectedDays);
+                      onChanged(weekType, selectedDays);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),

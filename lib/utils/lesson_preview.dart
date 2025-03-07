@@ -6,24 +6,25 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LessonPreview extends StatelessWidget {
-  LessonPreview(
-      {super.key,
-      required this.thisCourse,
-      this.editedCourse,
-      this.thisLesson,
-      this.editedLesson,
-      required this.validateUserInputFunc}) {
+  LessonPreview({
+    super.key,
+    required this.thisCourse,
+    this.editedCourse,
+    this.thisLesson,
+    this.editedLesson,
+    required this.validateUserInputFunc,
+    this.isCreateNew = false,
+  }) {
     assert(thisLesson == null || editedLesson != null, "editedLesson must be provided if thisLesson is provided");
     assert(editedLesson != null || editedCourse != null, "editedLesson or editedCourse must be provided");
   }
 
   final Course thisCourse;
   final Course? editedCourse;
-
   final Lesson? thisLesson;
   final Lesson? editedLesson;
-
   final String Function() validateUserInputFunc;
+  final bool isCreateNew;
 
   final coursesController = Get.find<CoursesController>();
 
@@ -33,17 +34,24 @@ class LessonPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print('build LessonPreview status ${editedLesson?.status}');
+    print('thisCourse ${thisCourse.name} ${thisCourse.id}');
     Map<Course, List<Lesson>> expectedLessonsMap = <Course, List<Lesson>>{};
 
     final check = validateUserInputFunc();
     if (check != "") {
-      return Text(check);
+      return Center(child: Text(check));
     }
-
-    bool viewExpected = viewExpectedLesson(thisCourse, editedCourse, thisLesson, editedLesson);
+    bool viewExpected = isCreateNew || viewExpectedLesson(thisCourse, editedCourse, thisLesson, editedLesson);
+    print('build preview viewExpected $viewExpected');
 
     if (viewExpected) {
-      expectedLessonsMap = reCalCourseLessonsMap(thisCourse, editedCourse, thisLesson, editedLesson);
+      expectedLessonsMap = reCalCourseLessonsMap(thisCourse, editedCourse, thisLesson, editedLesson, isCreateNew);
+      print('generate expectedLessonsMap length ${expectedLessonsMap.length}');
+    }
+
+    print('thisCourse ${thisCourse.name} ${thisCourse.id}');
+    for (var entry in expectedLessonsMap.entries) {
+      print('generate expectedLessonsMap ${entry.key.name} ${entry.key.id} ${entry.value.length}');
     }
 
     return ListView(
@@ -60,15 +68,25 @@ class LessonPreview extends StatelessWidget {
                 .toList(),
           ),
         if (viewExpected)
-          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name == thisCourse.name))
+          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.id == thisCourse.id))
             DynamicLessonList(
               title: "修改后该课堂排课 ${entry.key.name}",
               course: entry.key,
               lessons: entry.value.where((lesson) => lesson.status == LessonStatus.notStarted).toList(),
               titleColor: Colors.red[300],
             ),
+
+        if (viewExpected && isCreateNew)
+          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.id == thisCourse.id))
+            DynamicLessonList(
+              title: "新课堂归档 ${entry.key.name}",
+              course: entry.key,
+              lessons: entry.value.where((lesson) => lesson.status == LessonStatus.archived).toList(),
+              titleColor: Colors.green[300],
+            ),
+
         if (viewExpected && thisCourse.pattern.type == PatternType.costClassTimeUnit)
-          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.name != thisCourse.name))
+          for (var entry in expectedLessonsMap.entries.where((entry) => entry.key.id != thisCourse.id))
             DynamicLessonList(
               title: "修改后其它课堂排课 ${entry.key.name}",
               course: entry.key,
@@ -101,16 +119,28 @@ Map<Course, List<Lesson>> reCalCourseLessonsMap(
   Course? editedCourse,
   Lesson? thisLesson,
   Lesson? editedLesson,
+  bool isCreateNew,
 ) {
-  final coursesController = Get.find<CoursesController>();
-  late final List<Lesson> currentLessons = coursesController.getCourseLessons(thisCourse.id);
+  if (isCreateNew) {
+    print('reCalCourseLessonsMap isCreateNew');
+    Course course = editedCourse ?? thisCourse;
+    Map<Course, List<Lesson>> newLessonsMap;
+    switch (course.pattern.type) {
+      case PatternType.eachSingleLesson:
+        newLessonsMap = {thisCourse: reCalculateLessonsForEachSingle(course, editedLesson)};
+        break;
+      case PatternType.costClassTimeUnit:
+        // todo zero not right at here when create new lessons
+        newLessonsMap = reCalculateLessonsForTimeUnit(course, deltaTimeUnit: 0, editLesson: editedLesson);
+        break;
+    }
+    return newLessonsMap;
+  }
+
+  print('reCalCourseLessonsMap not isCreateNew');
   switch (thisCourse.pattern.type) {
     case PatternType.eachSingleLesson:
-      final List<Lesson> editLessons = currentLessons.map((e) => e.clone()).toList();
-      if (editedLesson != null) {
-        editLessons[editLessons.indexWhere((element) => element.id == editedLesson.id)] = editedLesson;
-      }
-      return {thisCourse: reCalculateLessonsForEachSingle(editLessons, editedCourse ?? thisCourse)};
+      return {editedCourse ?? thisCourse: reCalculateLessonsForEachSingle(editedCourse ?? thisCourse, editedLesson)};
 
     case PatternType.costClassTimeUnit:
       double deltaTimeUnit = 0;
@@ -124,6 +154,7 @@ Map<Course, List<Lesson>> reCalCourseLessonsMap(
           deltaTimeUnit = -thisCourse.pattern.value;
         }
       }
+      print('deltaTimeUnit $deltaTimeUnit');
       return reCalculateLessonsForTimeUnit(thisCourse, editLesson: editedLesson, deltaTimeUnit: deltaTimeUnit);
   }
 }
