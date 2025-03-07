@@ -3,10 +3,11 @@ import 'package:daydayup/utils/text_input.dart';
 import 'package:flutter/material.dart';
 
 class StatusPicker extends StatelessWidget {
-  const StatusPicker({super.key, required this.status, required this.onChange});
+  const StatusPicker({super.key, required this.status, required this.onChange, this.enableArchive = false});
 
   final LessonStatus status;
   final void Function(LessonStatus) onChange;
+  final bool enableArchive;
 
   final InputTitleEnum title = InputTitleEnum.lessonStatus;
 
@@ -34,7 +35,8 @@ class StatusPicker extends StatelessWidget {
             SegmentedButton(
               style: SegmentedButton.styleFrom(padding: EdgeInsets.only(left: 2, right: 2)),
               segments: [
-                for (final eachStatus in LessonStatus.values)
+                for (final eachStatus
+                    in LessonStatus.values.takeWhile((element) => enableArchive || element != LessonStatus.archived))
                   ButtonSegment<LessonStatus>(
                     value: eachStatus,
                     tooltip: eachStatus.name,
