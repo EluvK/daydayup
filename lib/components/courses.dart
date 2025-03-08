@@ -194,9 +194,14 @@ class CourseTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
       decoration: BoxDecoration(
-        color: course.color.withAlpha(24),
+        // color: course.color.withAlpha(24),
         border: Border.all(width: 0.5),
         borderRadius: BorderRadius.circular(12.0),
+        gradient: LinearGradient(
+          colors: [course.color.withAlpha(64), course.color.withAlpha(148)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: InkWell(
         onTap: () {

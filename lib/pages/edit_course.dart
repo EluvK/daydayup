@@ -59,7 +59,7 @@ class _EditCourseState extends State<EditCourse> {
           duration: Duration(hours: 2),
         ),
         pattern: Pattern(type: PatternType.eachSingleLesson, value: 10),
-        color: RandomColor.getColorObject(Options(luminosity: Luminosity.dark)),
+        color: RandomColor.getColorObject(Options(luminosity: Luminosity.light)),
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),

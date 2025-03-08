@@ -42,7 +42,7 @@ class _EditUserState extends State<EditUser> {
       var user = User(
         id: const Uuid().v4(),
         name: '',
-        color: RandomColor.getColorObject(Options(luminosity: Luminosity.dark)),
+        color: RandomColor.getColorObject(Options(luminosity: Luminosity.light)),
       );
       return Padding(
         padding: const EdgeInsets.all(8.0),
