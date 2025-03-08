@@ -238,7 +238,9 @@ class __EditCourseInnerState extends State<_EditCourseInner> {
                 print('on save: editCourse:$editCourse');
                 Map<Course, List<Lesson>> expectedLessonsMap;
                 try {
-                  expectedLessonsMap = reCalCourseLessonsMap(widget.course, editCourse, null).getOrThrow();
+                  expectedLessonsMap =
+                      reCalCourseLessonsMap(widget.isCreateNew ? editCourse : widget.course, editCourse, null)
+                          .getOrThrow();
                 } on CalculateError {
                   Get.snackbar('错误', '生成课程出错');
                   return;

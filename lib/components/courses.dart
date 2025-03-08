@@ -239,8 +239,8 @@ class CourseTile extends StatelessWidget {
                 subtitle: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("$daysOfWeek, $time"),
-                    if (showUser) UserAvatar(user: course.user, isSelected: false),
+                    Expanded(child: Text("$daysOfWeek, $time")),
+                    UserAvatar(user: course.user, isSelected: false),
                   ],
                 ),
               ),
