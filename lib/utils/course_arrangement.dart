@@ -85,7 +85,7 @@ CalResult<CourseLessonMap> reCalculateLessonsForTimeUnit(Course course, Lesson? 
 
   print('========== current unit : $generateCourseTimeUnitCost, ${courseGroup.totalAmount} ==========');
   if (generateCourseTimeUnitCost > courseGroup.totalAmount) {
-    print('generateCourseTimeUnitCost > courseGroup.restAmount');
+    print('generateCourseTimeUnitCost > courseGroup.totalAmount');
     return Failure(CalculateError.notEnoughAmount);
   }
 

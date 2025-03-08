@@ -1,5 +1,6 @@
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
+import 'package:daydayup/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -19,7 +20,6 @@ class Setting extends StatelessWidget {
             padding: const EdgeInsets.all(12.0),
             child: UserSetting(),
           ),
-          Divider(),
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: AppSetting(),
@@ -124,22 +124,78 @@ class _AppSettingState extends State<AppSetting> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('// 调试功能'),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text("检查截至日期"),
-            TextButton(
-              onLongPress: () {
-                settingController.setLastUpdateLessonStatusTime(DateTime(1970));
-                setState(() {});
-              },
-              onPressed: null,
-              child: Text(DateFormat.yMMMd().format(settingController.getLastUpdateLessonStatusTime().toLocal())),
-            )
-          ],
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'APP设置',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
         ),
+        Divider(),
+        mainPageSelector(),
+        SizedBox(height: 8),
+        aboutAppWidget(),
+        if (isDebug()) Text('// 调试功能'),
+        if (isDebug())
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("检查截至日期"),
+              TextButton(
+                onLongPress: () {
+                  settingController.setLastUpdateLessonStatusTime(DateTime(1970));
+                  setState(() {});
+                },
+                onPressed: null,
+                child: Text(DateFormat.yMMMd().format(settingController.getLastUpdateLessonStatusTime().toLocal())),
+              )
+            ],
+          ),
       ],
+    );
+  }
+
+  Widget aboutAppWidget() {
+    return ElevatedButton(
+      onPressed: () {
+        Get.toNamed('/about');
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text("关于 APP"),
+          Text(" $VERSION "),
+        ],
+      ),
+    );
+  }
+
+  Widget mainPageSelector() {
+    return ElevatedButton(
+      onPressed: () {
+        settingController.setMainPageAtStartup((settingController.getMainPageAtStartup() + 1) % 4);
+        setState(() {});
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text("启动展示页面"),
+          DropdownButton<int>(
+            isDense: true,
+            value: settingController.getMainPageAtStartup(),
+            onChanged: (int? value) {
+              settingController.setMainPageAtStartup(value!);
+              setState(() {});
+            },
+            items: [
+              DropdownMenuItem(value: 0, child: Row(children: [Icon(Icons.home), Text('  日程  ')])),
+              DropdownMenuItem(value: 1, child: Row(children: [Icon(Icons.calendar_month), Text('  日历  ')])),
+              DropdownMenuItem(value: 2, child: Row(children: [Icon(Icons.book), Text('  课程  ')])),
+              DropdownMenuItem(value: 3, child: Row(children: [Icon(Icons.settings), Text('  设置  ')])),
+            ],
+          )
+        ],
+      ),
     );
   }
 }

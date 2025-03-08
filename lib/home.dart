@@ -16,7 +16,7 @@ class HomePage extends GetResponsiveView {
 
   @override
   Widget? desktop() {
-    return Placeholder();
+    return Text('暂未适配');
   }
 }
 

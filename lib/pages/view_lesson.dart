@@ -3,6 +3,7 @@ import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
+import 'package:daydayup/utils/utils.dart';
 import 'package:daydayup/utils/view_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -63,7 +64,9 @@ class _ViewLessonState extends State<ViewLesson> {
         Divider(),
 
         // 时间信息
-        Align(alignment: Alignment.topLeft, child: Text('时间信息')),
+        Align(
+            alignment: Alignment.topLeft,
+            child: Text('时间信息${lesson.endTime != lesson.originalEndTime ? userModifiedIcon : ''}')),
         TimeViewWidget(
           title: TimeTitleEnumWrapper(TimeTitleEnum.lessonStartDateTime),
           value: lesson.startTime,

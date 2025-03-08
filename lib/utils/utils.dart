@@ -30,3 +30,15 @@ List<DateTime> daysInRange(DateTime first, DateTime last) {
 DateTime utc2LocalDay(DateTime dateTime) {
   return keepOnlyDay(dateTime.toLocal());
 }
+
+const String userModifiedIcon = '🛠️';
+
+// ignore: constant_identifier_names
+const String VERSION = String.fromEnvironment('APP_VERSION', defaultValue: 'debug');
+
+bool isDebug() {
+  return VERSION == 'debug';
+}
+
+// ignore: constant_identifier_names
+const String APP_BUILD_NUMBER = String.fromEnvironment('APP_BUILD_NUMBER', defaultValue: '0');

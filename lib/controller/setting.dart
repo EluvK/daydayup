@@ -19,7 +19,7 @@ class SettingController extends GetxController {
   DateTime lastUpdateLessonStatusTime = DateTime.now();
 
   // running cache
-  final currentMainPage = 0.obs;
+  final Rx<int> currentMainPage = (-1).obs;
 
   @override
   Future<void> onInit() async {
@@ -45,7 +45,6 @@ class SettingController extends GetxController {
     }
 
     mainPageAtStartup.value = box.read('mainPageAtStartup') ?? 1;
-    currentMainPage.value = mainPageAtStartup.value;
 
     if (box.read('lastUpdateLessonStatusTime') != null) {
       lastUpdateLessonStatusTime = DateTime.parse(box.read('lastUpdateLessonStatusTime'));
@@ -121,6 +120,9 @@ class SettingController extends GetxController {
   }
 
   int getCurrentMainPage() {
+    if (currentMainPage.value == -1) {
+      return mainPageAtStartup.value;
+    }
     return currentMainPage.value;
   }
 

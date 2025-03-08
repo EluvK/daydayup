@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:daydayup/model/course.dart';
 import 'package:daydayup/utils/user_picker.dart';
+import 'package:daydayup/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ class LessonTile extends StatelessWidget {
     this.showDate = false,
     this.showUser = true,
     this.editable = true,
+    this.showDescription = true,
   });
 
   final Course course;
@@ -21,6 +23,7 @@ class LessonTile extends StatelessWidget {
   final bool showDate;
   final bool showUser;
   final bool editable;
+  final bool showDescription;
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +34,10 @@ class LessonTile extends StatelessWidget {
           "${DateFormat.yMd().format(lesson.startTime.toLocal())},${DateFormat.E().format(lesson.startTime.toLocal())},$time";
     }
     if (lesson.endTime != lesson.originalEndTime) {
-      time = "$time🛠️";
+      time = "$time $userModifiedIcon";
     }
 
-    if (course.description.isNotEmpty) {
+    if (course.description.isNotEmpty && showDescription) {
       time = "$time\n${course.description}";
     }
 
@@ -163,6 +166,7 @@ class _DynamicLessonListState extends State<DynamicLessonList> {
             showDate: true,
             showUser: false,
             editable: widget.editable,
+            showDescription: false,
           ),
         if (widget.lessons.length > _maxShow) ...[
           TextButton(

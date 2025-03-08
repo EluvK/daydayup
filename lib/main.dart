@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/home.dart';
+import 'package:daydayup/pages/about.dart';
 import 'package:daydayup/pages/edit_course.dart';
 import 'package:daydayup/pages/edit_course_group.dart';
 import 'package:daydayup/pages/edit_lesson.dart';
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       getPages: [
         GetPage(name: '/', page: () => HomePage()),
+        GetPage(name: '/about', page: () => AboutPage()),
         GetPage(name: '/edit-course', page: () => EditCoursePage()),
         GetPage(name: '/view-course', page: () => ViewCoursePage()),
         GetPage(name: '/edit-course-group', page: () => EditCourseGroupPage()),

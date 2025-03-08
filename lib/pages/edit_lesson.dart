@@ -1,3 +1,4 @@
+import 'package:daydayup/components/lesson.dart';
 import 'package:daydayup/controller/courses.dart';
 import 'package:daydayup/controller/setting.dart';
 import 'package:daydayup/model/course.dart';
@@ -7,6 +8,7 @@ import 'package:daydayup/utils/lesson_preview.dart';
 import 'package:daydayup/utils/status_picker.dart';
 import 'package:daydayup/utils/text_input.dart';
 import 'package:daydayup/utils/time_picker.dart';
+import 'package:daydayup/utils/utils.dart';
 import 'package:daydayup/utils/view_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -115,19 +117,25 @@ class __EditLessonInnerState extends State<_EditLessonInner> {
           },
           initialValue: editLesson.name,
         ),
-        StatusPicker(
-          status: editLesson.status,
-          onChange: (value) {
-            editLesson.status = value;
-            setState(() {});
-          },
-        ),
+        if (editLesson.status == LessonStatus.archived)
+          ViewWidget(title: InputTitleEnumWrapper(InputTitleEnum.lessonStatus), value: lessonStatusWidget(editLesson)),
+        if (editLesson.status != LessonStatus.archived)
+          StatusPicker(
+            status: editLesson.status,
+            onChange: (value) {
+              editLesson.status = value;
+              setState(() {});
+            },
+          ),
 
         UserViewWidget(user: editLesson.user),
         Divider(),
 
         // 时间信息
-        Align(alignment: Alignment.topLeft, child: Text('时间信息')),
+        Align(
+          alignment: Alignment.topLeft,
+          child: Text('时间信息${editLesson.endTime != editLesson.originalEndTime ? userModifiedIcon : ''}'),
+        ),
         TimePickerWidget(
           timeTitle: TimeTitleEnum.lessonStartDateTime,
           initialValue: editLesson.startTime,

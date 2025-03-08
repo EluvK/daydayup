@@ -29,11 +29,11 @@ class Courses extends StatelessWidget {
               return [
                 PopupMenuItem<String>(
                   value: 'add_course',
-                  child: Text('新增课程'),
+                  child: Text(' 新增课程 '),
                 ),
                 PopupMenuItem<String>(
                   value: 'add_course_group',
-                  child: Text('新增课程组'),
+                  child: Text(' 新增课程组 '),
                 ),
               ];
             },
@@ -116,7 +116,7 @@ class _CoursesTableState extends State<CoursesTable> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          "其它课程",
+                          "课程",
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -173,13 +173,13 @@ class CourseTile extends StatelessWidget {
     super.key,
     required this.course,
     required this.status,
-    this.editable = false,
+    // this.editable = false,
     this.showUser = true,
   });
 
   final Course course;
   final CourseStatus status;
-  final bool editable;
+  // final bool editable;
   final bool showUser;
 
   @override
@@ -198,7 +198,7 @@ class CourseTile extends StatelessWidget {
         border: Border.all(width: 0.5),
         borderRadius: BorderRadius.circular(12.0),
         gradient: LinearGradient(
-          colors: [course.color.withAlpha(64), course.color.withAlpha(148)],
+          colors: [course.color.withAlpha(96), course.color.withAlpha(168)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -209,27 +209,26 @@ class CourseTile extends StatelessWidget {
         },
         child: Row(
           children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(minWidth: 60),
-              child: Column(
-                children: [
-                  if (showUser) UserAvatar(user: course.user, isSelected: false),
-                  SizedBox(height: 4),
-                ],
-              ),
-            ),
+            // ConstrainedBox(
+            //   constraints: BoxConstraints(minWidth: 60),
+            //   child: Column(
+            //     children: [
+            //       if (showUser) UserAvatar(user: course.user, isSelected: false),
+            //       SizedBox(height: 4),
+            //     ],
+            //   ),
+            // ),
             Expanded(
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                 onTap: null,
-                trailing: editable
-                    ? IconButton(
-                        onPressed: () async {
-                          await Get.toNamed('/edit-course', arguments: [course.id]);
-                        },
-                        icon: Icon(Icons.edit),
-                      )
-                    : null,
+                trailing: null,
+                // ? IconButton(
+                //     onPressed: () async {
+                //       await Get.toNamed('/edit-course', arguments: [course.id]);
+                //     },
+                //     icon: Icon(Icons.edit),
+                //   )
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -237,7 +236,13 @@ class CourseTile extends StatelessWidget {
                     Text(status.fmt()),
                   ],
                 ),
-                subtitle: Text("$daysOfWeek, $time"),
+                subtitle: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("$daysOfWeek, $time"),
+                    if (showUser) UserAvatar(user: course.user, isSelected: false),
+                  ],
+                ),
               ),
             )
           ],
