@@ -194,6 +194,11 @@ class __EditCourseGroupInnerState extends State<_EditCourseGroupInner> {
       Get.snackbar('❌ 错误', '课时数必须大于0');
       return false;
     }
+
+    if (newBill.value.amount > 999) {
+      Get.snackbar('❌ 错误', '${newBill.value.amount} 课时数似乎不太合理呢');
+      return false;
+    }
     return true;
   }
 }
